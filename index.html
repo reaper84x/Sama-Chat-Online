@@ -109,152 +109,63 @@
         }
 
         #login-form {
-            display: flex;
-            flex-direction: column;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
             padding: 32px;
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
         }
 
         #login-form input {
+            width: 100%;
             margin-bottom: 16px;
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
-
-        #login-form input:focus {
-            border-color: #0084ff;
-            outline: none;
-        }
-
-        #login-form button {
-            padding: 12px 16px ;
+            padding : 12px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 24px;
+            outline: none;
+            font-size: 16px;
+            background-color: #f0f2f5;
+        }
+
+        #login-form button[type="submit"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 24px;
+            outline: none;
+            font-size: 16px;
             background-color: #0084ff;
             color: white;
-            font-size: 16px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
 
-        #login-form button:hover {
+        #login-form button[type="submit"]:hover {
             background-color: #0066cc;
         }
     </style>
 </head>
 <body>
+    <div id="login-form">
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button type="submit">Login</button>
+    </div>
     <div id="chat-container">
-        <div id="chat-messages"></div>
+        <div id="chat-messages">
+            <!-- Messages will be rendered here -->
+        </div>
         <div id="chat-input">
-            <input id="message-input" type="text" placeholder="Type a message...">
+            <input type="text" id="message-input" placeholder="Type a message...">
             <button id="send-button">Send</button>
         </div>
     </div>
-    <form id="login-form">
-        <input id="username-input" type="text" placeholder="Username">
-        <button id="login-button">Login</button>
-    </form>
-
     <script>
-        const BIN_ID = 'your-bin-id';
-        const API_KEY = 'your-api-key';
-        let userType = '';
-
-        async function loadMessages() {
-            try {
-                const response = await axios.get(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: {
-                        'X-Master-Key': API_KEY
-                    }
-                });
-                const messages = response.data.record.messages;
-                localStorage.setItem('chatMessages', JSON.stringify(messages));
-                displayMessages(messages);
-            } catch (error) {
-                console.error('Error loading messages:', error);
-                // If there's an error, try to load messages from localStorage
-                const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-                displayMessages(storedMessages);
-            }
-        }
-
-        async function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value.trim();
-            if (message) {
-                try {
-                    const response = await axios.get(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                        headers: {
-                            'X-Master-Key': API_KEY
-                        }
-                    });
-                    const currentData = response.data.record;
-                    currentData.messages.push({ type: userType, text: message });
-                    await axios.put(`https://api.jsonbin.io/v3/b/${BIN_ID}`, currentData, {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': API_KEY
-                        }
-                    });
-                    localStorage.setItem('chatMessages', JSON.stringify(currentData.messages));
-                    messageInput.value = '';
-                    displayMessages(currentData.messages);
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    // If there's an error, update localStorage only
-                    const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-                    storedMessages.push({ type: userType, text: message });
-                    localStorage.setItem('chatMessages', JSON.stringify(storedMessages));
-                    messageInput.value = '';
-                    displayMessages(storedMessages);
-                }
-            }
-        }
-
-        function displayMessages(messages) {
-            const chatMessages = document.getElementById('chat-messages');
-            chatMessages.innerHTML = '';
-            messages.forEach((message) => {
-                const messageElement = document.createElement('div');
-                messageElement.className = message.type === 'host' ? 'message host' : 'message partner';
-                messageElement.textContent = message.text;
-                chatMessages.appendChild(messageElement);
-            });
-        }
-
-        function startChat(type) {
-            userType = type;
-            document.getElementById('login-form').style.display = 'none';
-            document.getElementById('chat-messages').style.display = 'block';
-            document.getElementById('chat-input').style.display = 'flex';
-            const storedMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-            if (storedMessages.length > 0) {
-                displayMessages(storedMessages);
-            } else {
-                loadMessages();
-            }
-        }
-
-        document.getElementById('login-button').addEventListener('click', (e) => {
-            e.preventDefault();
-            const usernameInput = document.getElementById('username-input');
-            const username = usernameInput.value.trim();
-            if (username) {
-                startChat(username);
-            }
-        });
-
-        document.getElementById('send-button').addEventListener('click', () => {
-            sendMessage();
-        });
-
-        document.getElementById('message-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+        // Your JavaScript code goes here
     </script>
 </body>
 </html>
