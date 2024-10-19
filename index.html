@@ -3,134 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Application - Login/Register</title>
+    <title>Chat Room</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #f4f4f4;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
             height: 100vh;
+            margin: 0;
         }
-        #form-container {
-            background: #ffffff;
+        .header {
+            width: 100%;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
+            background-color: #6c5ce7; /* Pastel Purple */
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        p {
             text-align: center;
+            font-size: 20px;
+            position: sticky;
+            top: 0;
+        }
+        #chatroom-code {
+            font-size: 12px; /* Reduced size */
+            margin-top: 5px;
+            color: #fff;
+        }
+        .chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column; /* Arrange messages vertically */
+        }
+        .chat-bubble {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            max-width: 70%;
+            position: relative;
+            display: inline-block;
+            word-wrap: break-word; /* Break long words */
+            animation: float 2s ease-in-out infinite; /* Floating animation */
+        }
+        .chat-bubble.me {
+            background-color: #ff6b81; /* Pastel Pink */
+            color: white;
+            align-self: flex-end; /* Align to the right for the current user */
+        }
+        .chat-bubble.other {
+            background-color: #74b9ff; /* Pastel Blue */
+            color: black;
+            align-self: flex-start; /* Align to the left for other users */
+        }
+        .profile-pic {
+            width: 30px; /* Smaller size for profile pic */
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        .message-container {
+            display: flex;
+            align-items: flex-end; /* Align items vertically */
+            margin-bottom: 10px;
+        }
+        .chat-input-container {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            box-sizing: border-box;
+            border-top: 1px solid #ccc;
+            border-radius: 5px 0 0 5px; /* Rounded corners for input */
+        }
+        .send-button {
+            padding: 15px;
+            border: none;
+            background-color: #6c5ce7; /* Same color as header */
+            color: white;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0; /* Rounded corners for button */
+        }
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
         }
     </style>
 </head>
 <body>
-    <div id="form-container">
-        <form id="login-form" onsubmit="event.preventDefault(); login();">
-            <h2>Login</h2>
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-            <p>Don't have an account? <span onclick="toggleForm()" style="color: #007bff; cursor: pointer;">Register</span></p>
-        </form>
 
-        <form id="registration-form" onsubmit="event.preventDefault(); register();" style="display:none;">
-            <h2>Register</h2>
-            <input type="text" id="new-username" placeholder="Username" required>
-            <input type="password" id="new-password" placeholder="Password" required>
-            <button type="submit">Register</button>
-            <p>Already have an account? <span onclick="toggleForm()" style="color: #007bff; cursor: pointer;">Login</span></p>
-        </form>
+    <div class="header">
+        Chat Room
+        <div id="chatroom-code"></div>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+        <!-- Chat bubbles will be appended here -->
+    </div>
+
+    <div class="chat-input-container">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeydown="checkEnter(event)">
+        <button class="send-button" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
         const binId = "6713e37dacd3cb34a899bbcb";
         const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO";
 
-        function toggleForm() {
-            const loginForm = document.getElementById('login-form');
-            const registrationForm = document.getElementById('registration-form');
-            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
-            registrationForm.style.display = registrationForm.style.display === 'none' ? 'block' : 'none';
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const roomCode = urlParams.get('room');
+
+        const username = localStorage.getItem('username');  // Retrieve the username from localStorage
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const chatroomCodeElement = document.getElementById('chatroom-code');
+
+        // Show room code at the top
+        chatroomCodeElement.textContent = `Room Code: ${roomCode}`;
+
+        // Redirect to login if user is not logged in
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = "login_page_url"; // Replace with actual login page URL
         }
 
-        function register() {
-            const username = document.getElementById('new-username').value;
-            const password = document.getElementById('new-password').value;
-
-            fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+        // Load chat messages for the current room
+        function loadChatMessages() {
+            fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET',
                 headers: {
                     'X-Master-Key': masterKey
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const users = data.record.users || [];
-                if (users.find(user => user.username === username)) {
-                    alert('Username already exists.');
-                    return;
-                }
-                users.push({ username, password }); // For simplicity, storing plain passwords; consider hashing in production.
-                return fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                    method: 'PUT',
+            }).then(response => response.json())
+              .then(data => {
+                  const chatrooms = data.record.chatrooms || [];
+                  const currentRoom = chatrooms.find(room => room.roomId === roomCode);
+
+                  if (currentRoom) {
+                      chatContainer.innerHTML = '';  // Clear previous messages
+                      currentRoom.messages.forEach(message => {
+                          appendMessage(message.username, message.message);
+                      });
+                  }
+              }).catch(err => console.error(err));
+        }
+
+        // Append chat bubbles for each message
+        function appendMessage(user, message) {
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('chat-bubble');
+
+            // Adjust bubble alignment based on user
+            if (user === username) {
+                bubble.classList.add('me');
+            } else {
+                bubble.classList.add('other');
+            }
+
+            bubble.textContent = message;
+
+            const profilePic = document.createElement('div');
+            profilePic.classList.add('profile-pic');
+            profilePic.style.backgroundImage = `url('path_to_avatar_image_or_placeholder')`;  // Replace with actual avatar logic
+
+            messageContainer.appendChild(profilePic);
+            messageContainer.appendChild(bubble);
+            chatContainer.appendChild(messageContainer);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+        }
+
+        // Send a message
+        function sendMessage() {
+            if (chatInput.value.trim()) {
+                const message = chatInput.value.trim();
+                chatInput.value = '';
+
+                // Send the message to the current chatroom
+                fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                    method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-Master-Key': masterKey
-                    },
-                    body: JSON.stringify({ users })
-                });
-            })
-            .then(() => {
-                alert('Registration successful! You can now log in.');
-                toggleForm();
-            })
-            .catch(err => console.error(err));
+                    }
+                }).then(response => response.json())
+                  .then(data => {
+                      const chatrooms = data.record.chatrooms || [];
+                      const currentRoom = chatrooms.find(room => room.roomId === roomCode);
+
+                      if (currentRoom) {
+                          currentRoom.messages.push({
+                              username: username,
+                              message: message,
+                              timestamp: new Date().toISOString()
+                          });
+
+                          // Update the chatroom in the JSONBin
+                          fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                              method: 'PUT',
+                              headers: {
+                                  'Content-Type': 'application/json',
+                                  'X-Master-Key': masterKey
+                              },
+                              body: JSON.stringify({ chatrooms })
+                          }).then(() => {
+                              appendMessage(username, message);  // Add message to UI
+                          }).catch(err => console.error(err));
+                      }
+                  }).catch(err => console.error(err));
+            }
         }
 
-        function login() {
-            const usernameInput = document.getElementById('username').value;
-            const passwordInput = document.getElementById('password').value;
-
-            fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Master-Key': masterKey
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const users = data.record.users || [];
-                const user = users.find(user => user.username === usernameInput && user.password === passwordInput);
-
-                if (user) {
-                    localStorage.setItem('username', usernameInput);
-                    window.location.href = 'chat_page.html'; // Redirect to chat page after login
-                } else {
-                    alert('Invalid credentials. Please try again.');
-                }
-            })
-            .catch(err => console.error(err));
+        // Check for Enter key
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         }
+
+        // Load initial chat messages when entering the room
+        loadChatMessages();
+
+        // Polling to check for new messages every 3 seconds
+        setInterval(loadChatMessages, 3000);
     </script>
 </body>
 </html>
