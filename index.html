@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Website - Login & Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .toggle-btn {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+        .toggle-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button onclick="login()">Login</button>
+            <button class="toggle-btn" onclick="showRegistrationForm()">Register</button>
+        </div>
+
+        <!-- Registration Form -->
+        <div id="registration-form" style="display: none;">
+            <h2>Register</h2>
+            <input type="text" id="register-username" placeholder="Username" required>
+            <input type="password" id="register-password" placeholder="Password" required>
+            <input type="email" id="register-email" placeholder="Email" required>
+            <button onclick="register()">Register</button>
+            <button class="toggle-btn" onclick="showLoginForm()">Back to Login</button>
+        </div>
+    </div>
+
+    <script>
+        // JSONBin credentials
+        const binId = "6713e37dacd3cb34a899bbcb";
+        const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO";
+
+        // Show Registration Form
+        function showRegistrationForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('registration-form').style.display = 'block';
+        }
+
+        // Show Login Form
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('registration-form').style.display = 'none';
+        }
+
+        // Handle Registration
+        function register() {
+            const username = document.getElementById("register-username").value;
+            const password = document.getElementById("register-password").value;
+            const email = document.getElementById("register-email").value;
+
+            if (username && password && email) {
+                fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': masterKey
+                    }
+                }).then(response => response.json())
+                  .then(data => {
+                    const users = data.record.users || [];
+                    const userExists = users.some(user => user.username === username);
+
+                    if (!userExists) {
+                        users.push({
+                            username: username,
+                            password: password,
+                            email: email,
+                            profile: {
+                                avatar: '',
+                                bio: '',
+                                address: '',
+                                sex: '',
+                                location: ''
+                            }
+                        });
+
+                        fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': masterKey
+                            },
+                            body: JSON.stringify({ users })
+                        }).then(() => {
+                            alert('Registration successful!');
+                            showLoginForm();
+                        });
+                    } else {
+                        alert('Username already exists.');
+                    }
+                }).catch(err => console.error(err));
+            } else {
+                alert('Please fill all the fields.');
+            }
+        }
+
+        // Handle Login
+        function login() {
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+
+            fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': masterKey
+                }
+            }).then(response => response.json())
+              .then(data => {
+                const users = data.record.users || [];
+                const validUser = users.find(user => user.username === username && user.password === password);
+
+                if (validUser) {
+                    alert('Login successful!');
+                    window.location.href = "chat_page.html";  // Redirects to chat page
+                } else {
+                    alert('Invalid username or password.');
+                }
+            }).catch(err => console.error(err));
+        }
+    </script>
+</body>
+</html>
