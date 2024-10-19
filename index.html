@@ -56,11 +56,12 @@
 
     .messages {
       flex-grow: 1;
-      padding: 20px;
+      padding: 10px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      width: 100%; /* Ensure full width */
+      width: 90%; /* Adjusted width for better fit */
+      height: 70%; /* Adjusted height */
     }
 
     .message {
@@ -87,6 +88,7 @@
       padding: 10px;
       background-color: #ffffff;
       display: flex;
+      width: 90%; /* Adjusted width for input container */
     }
 
     .input-container input {
@@ -214,7 +216,10 @@
             'Content-Type': 'application/json',
             'X-Master-Key': apiKey
           },
-          body: JSON.stringify([message]) // Wrap the message in an array
+          body: JSON.stringify([...messageContainer.children].map(child => {
+            const msgEmail = child.classList.contains('message-right') ? email : 'other';
+            return { email: msgEmail, text: child.textContent };
+          }).concat(message)) // Keep previous messages and add the new one
         })
         .then(() => {
           messageInput.value = '';
