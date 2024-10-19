@@ -18,16 +18,16 @@
         .header {
             width: 100%;
             padding: 20px;
-            background-color: #007bff;
+            background-color: #6c5ce7; /* Pastel Purple */
             color: white;
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             position: sticky;
             top: 0;
         }
         #chatroom-code {
-            font-size: 14px;
-            margin-top: 10px;
+            font-size: 12px; /* Reduced size */
+            margin-top: 5px;
             color: #fff;
         }
         .chat-container {
@@ -37,27 +37,40 @@
             overflow-y: auto;
             margin-bottom: 20px;
             padding: 10px;
+            display: flex;
+            flex-direction: column; /* Arrange messages vertically */
         }
         .chat-bubble {
-            background-color: #e0e0e0;
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 10px;
             max-width: 70%;
             position: relative;
             display: inline-block;
+            word-wrap: break-word; /* Break long words */
+            animation: float 2s ease-in-out infinite; /* Floating animation */
         }
         .chat-bubble.me {
-            background-color: #007bff;
+            background-color: #ff6b81; /* Pastel Pink */
             color: white;
-            align-self: flex-end;
+            align-self: flex-end; /* Align to the right for the current user */
+        }
+        .chat-bubble.other {
+            background-color: #74b9ff; /* Pastel Blue */
+            color: black;
+            align-self: flex-start; /* Align to the left for other users */
         }
         .profile-pic {
-            width: 40px;
-            height: 40px;
+            width: 30px; /* Smaller size for profile pic */
+            height: 30px;
             border-radius: 50%;
             margin-right: 10px;
             display: inline-block;
+        }
+        .message-container {
+            display: flex;
+            align-items: flex-end; /* Align items vertically */
+            margin-bottom: 10px;
         }
         .chat-input {
             width: 100%;
@@ -67,6 +80,16 @@
             font-size: 16px;
             box-sizing: border-box;
             border-top: 1px solid #ccc;
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
         }
     </style>
 </head>
@@ -121,21 +144,29 @@
 
         // Append chat bubbles for each message
         function appendMessage(user, message) {
-            const bubble = document.createElement('div');
-            const profilePic = document.createElement('div');
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
 
+            const bubble = document.createElement('div');
             bubble.classList.add('chat-bubble');
+
+            // Adjust bubble alignment based on user
+            if (user === username) {
+                bubble.classList.add('me');
+            } else {
+                bubble.classList.add('other');
+            }
+
             bubble.textContent = message;
 
+            const profilePic = document.createElement('div');
             profilePic.classList.add('profile-pic');
             profilePic.style.backgroundImage = `url('path_to_avatar_image_or_placeholder')`;  // Replace with actual avatar logic
 
-            if (user === username) {
-                bubble.classList.add('me');
-            }
-
-            bubble.appendChild(profilePic);
-            chatContainer.appendChild(bubble);
+            messageContainer.appendChild(profilePic);
+            messageContainer.appendChild(bubble);
+            chatContainer.appendChild(messageContainer);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
         }
 
         // Send a message
