@@ -4,42 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcrypt.js/5.0.1/bcrypt.min.js"></script>
 </head>
 <body>
     <h1>Login</h1>
     <form id="login-form">
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <input type="submit" value="Login">
     </form>
 
     <script>
         const loginForm = document.getElementById('login-form');
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            fetch('https://api.jsonbin.io/v3/b/67126120ad19ca34f8bab618/collection', {
-                method: 'GET',
+            const user = { email, password };
+
+            fetch('https://api.jsonbin.io/v3/b/YOUR_BIN_ID/users/authenticate', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC',
+                    'X-Master-Key': 'YOUR_API_KEY',
                 },
+                body: JSON.stringify(user),
             })
-            .then((response) => response.json())
-            .then((data) => {
-                const user = data.find(user => user.username === username);
-                if (user && bcrypt.compareSync(password, user.password)) {
-                    // Login successful, redirect to chat page
-                    window.location.href = 'chat.html?username=' + encodeURIComponent(username);
-                } else {
-                    // Login failed, display error message
-                    alert ('Invalid credentials');
-                }
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                alert('Login successful!');
             })
-            .catch((error) => console.error('Error:', error));
+            .catch(error => console.error('Error:', error));
         });
     </script>
 </body>
