@@ -3,30 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
     <title>Registration and Login System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        form {
+            width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button[type="submit"] {
+            width: 100%;
+            height: 40px;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #3e8e41;
+        }
+    </style>
 </head>
 <body>
-    <div id="formContainer">
-        <h2>Registration</h2>
-        <form id="registrationForm">
-            <input type="text" placeholder="Username" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Register</button>
-        </form>
-        <button id="loginBtn">Already have an account? Login</button>
-    </div>
+    <h1>Registration and Login System</h1>
+    <form id="registrationForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Register</button>
+    </form>
+    <form id="loginForm" style="display: none;">
+        <label for="loginUsername">Username:</label>
+        <input type="text" id="loginUsername" name="loginUsername" required>
+        <label for="loginPassword">Password:</label>
+        <input type="password" id="loginPassword" name="loginPassword" required>
+        <button type="submit">Login</button>
+    </form>
+    <button id="toggleForm">Toggle Form</button>
 
-    <div id="loginContainer" class="hidden">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <input type="text" placeholder="Username" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <button id="registerBtn">Don't have an account? Register</button>
-    </div>
+    <script>
+        const jsonBinUrl = `https://api.jsonbin.io/v3/b/your-bin-id`;
+        const apiKey = "your-api-key";
 
-    <script src="script.js"></script>
+        document.getElementById('toggleForm').addEventListener('click', function() {
+            const registrationForm = document.getElementById('registrationForm');
+            const loginForm = document.getElementById('loginForm');
+            if (registrationForm.style.display === 'none') {
+                registrationForm.style.display = 'block';
+                loginForm.style.display = 'none';
+            } else {
+                registrationForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            }
+        });
+
+        document.getElementById('registrationForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            console.log('Registering user:', username);
+
+            const userData = { username, password };
+
+            try {
+                const response = await fetch(jsonBinUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': apiKey,
+                        'X-Bin-Versioning': 'false'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (response.ok) {
+                    console.log('Registration data sent to JSONBin.io successfully!');
+                } else {
+                    console.error('Error sending registration data to JSONBin.io:', response.status);
+                }
+            } catch (error) {
+                console.error('Error sending registration data to JSONBin.io:', error);
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const loginUsername = document.getElementById('loginUsername').value;
+            const loginPassword = document.getElementById('loginPassword').value;
+
+            console.log('Logging in user:', loginUsername);
+
+            try {
+                const response = await fetch(jsonBinUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': apiKey
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const users = data.record;
+                    const user = users.find(user => user.username === loginUsername && user.password === loginPassword);
+                    if ( user) {
+                        console.log('Login successful!');
+                    } else {
+                        console.error('Invalid username or password!');
+                    }
+                } else {
+                    console.error('Error fetching data from JSONBin.io:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching data from JSONBin.io:', error);
+            }
+        });
+    </script>
 </body>
-          </html>
+    </html>
