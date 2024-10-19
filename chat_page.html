@@ -3,208 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Room</title>
+    <title>Chat Application</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .header {
-            background: #007bff;
-            color: white;
-            padding: 10px;
-            text-align: center;
-        }
-        #chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            background: #ffffff;
-        }
-        .message-container {
-            display: flex;
-            align-items: flex-start;
-            margin: 5px 0;
-        }
-        .chat-bubble {
-            padding: 10px;
-            border-radius: 10px;
-            margin: 0 10px;
-            max-width: 70%;
-            position: relative;
-            animation: float 0.3s ease;
-        }
-        .me {
-            background-color: #e6f7ff;
-            margin-left: auto;
-        }
-        .other {
-            background-color: #f0f0f0;
-        }
-        .profile-pic {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #ccc;
-            margin-right: 10px;
-        }
-        .chat-input-container {
-            display: flex;
-            padding: 10px;
-            background: #f0f0f0;
-        }
-        .chat-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        .send-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            padding: 10px 15px;
-        }
-        .send-button:hover {
-            background-color: #0056b3;
-        }
-        @keyframes float {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0); }
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; }
+        .container { width: 90%; max-width: 600px; margin: 20px auto; }
+        h1 { text-align: center; }
+        .form { display: flex; flex-direction: column; margin-bottom: 20px; }
+        input { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px; border: none; border-radius: 4px; background-color: #5cb85c; color: white; cursor: pointer; }
+        button:hover { background-color: #4cae4c; }
+        .chat-container { border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: white; max-height: 400px; overflow-y: auto; }
+        .chat-bubble { padding: 10px; border-radius: 10px; margin: 5px; max-width: 75%; position: relative; }
+        .chat-bubble.me { background-color: #dcf8c6; align-self: flex-end; }
+        .chat-bubble.other { background-color: #f1f0f0; align-self: flex-start; }
+        .message-container { display: flex; align-items: flex-end; }
+        .room-code { text-align: center; font-weight: bold; margin: 10px 0; font-size: 0.8em; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="header">
-        Chat Room
-        <div id="chatroom-code" style="font-size: 12px; margin-top: 5px;"></div>
-    </div>
+    <div class="container">
+        <h1>Chat Application</h1>
 
-    <div id="chat-container"></div>
+        <div id="authSection">
+            <div id="loginForm" class="form">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p><button onclick="toggleRegistration()">Register</button></p>
+            </div>
 
-    <div class="chat-input-container">
-        <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeydown="checkEnter(event)">
-        <button class="send-button" onclick="sendMessage()">Send</button>
+            <div id="registrationForm" class="form hidden">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button onclick="register()">Register</button>
+                <p><button onclick="toggleRegistration()">Back to Login</button></p>
+            </div>
+        </div>
+
+        <div id="chatSection" class="hidden">
+            <div class="room-code" id="roomCodeDisplay"></div>
+            <div class="chat-container" id="chatContainer"></div>
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key === 'Enter'){sendMessage()}">
+            <button onclick="sendMessage()">Send</button>
+            <div>
+                <button id="hostChatBtn" onclick="createChatRoom()">Host Chat</button>
+                <button id="joinChatBtn" onclick="joinChatRoom()">Join Chat</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        const binId = "6713e37dacd3cb34a899bbcb";
-        const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO";
+        const binId = "6713e37dacd3cb34a899bbcb"; // Your JSONBin ID
+        const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO"; // Your master key
+        let username;
+        let currentRoomCode;
 
-        // Check if user is logged in
-        if (!localStorage.getItem('username')) {
-            alert("You must log in to access the chat room.");
-            window.location.href = 'index.html'; // Redirect to login page
+        function toggleRegistration() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('registrationForm').classList.toggle('hidden');
         }
 
-        const username = localStorage.getItem('username');
-        const chatContainer = document.getElementById('chat-container');
-        const chatInput = document.getElementById('chat-input');
-        const chatroomCodeElement = document.getElementById('chatroom
-                                                        code** element.
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
 
-        // Placeholder for chat room code
-        const chatroomCode = "12345"; // This should be dynamically generated when a room is created
-        chatroomCodeElement.textContent = `Room Code: ${chatroomCode}`;
-
-        // Load chat messages for the current room
-        function loadChatMessages() {
             fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'GET',
-                headers: {
-                    'X-Master-Key': masterKey
-                }
+                headers: { 'X-Master-Key': masterKey }
             })
             .then(response => response.json())
             .then(data => {
-                const messages = data.record.messages || [];
-                chatContainer.innerHTML = ''; // Clear previous messages
-                messages.forEach(msg => appendMessage(msg.username, msg.message)); // Append each message
-                chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+                const user = data.record.users.find(user => user.username === username && user.password === password);
+                if (user) {
+                    alert('Login successful!');
+                    document.getElementById('authSection').classList.add('hidden');
+                    document.getElementById('chatSection').classList.remove('hidden');
+                    window.username = username; // Set global username
+                } else {
+                    alert('Invalid credentials!');
+                }
             })
             .catch(err => console.error(err));
         }
 
-        // Send a message function
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return; // Do not send empty messages
-
-            const messageData = {
-                username: username,
-                message: message
-            };
+        function register() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
 
             fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'GET',
-                headers: {
-                    'X-Master-Key': masterKey
-                }
+                headers: { 'X-Master-Key': masterKey }
             })
             .then(response => response.json())
             .then(data => {
-                const messages = data.record.messages || [];
-                messages.push(messageData); // Add new message
+                if (data.record.users.find(user => user.username === username)) {
+                    alert('Username already exists!');
+                    return;
+                }
+                data.record.users.push({ username, password });
                 return fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': masterKey
-                    },
-                    body: JSON.stringify({ messages })
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': masterKey },
+                    body: JSON.stringify(data.record)
                 });
             })
             .then(() => {
-                chatInput.value = ''; // Clear input
-                loadChatMessages(); // Reload messages
+                alert('Registration successful! You can now log in.');
+                toggleRegistration(); // Go back to login form
             })
             .catch(err => console.error(err));
         }
 
-        // Append messages with user perspective alignment
-        function appendMessage(user, message) {
-            const messageContainer = document.createElement('div');
-            messageContainer.classList.add('message-container');
+        function createChatRoom() {
+            currentRoomCode = Math.random().toString(36).substring(2, 8); // Generate a unique room code
+            document.getElementById('roomCodeDisplay').textContent = `Room Code: ${currentRoomCode}`;
+            document.getElementById('chatContainer').innerHTML = ''; // Clear previous messages
+            alert(`Chat room created! Code: ${currentRoomCode}`);
+        }
 
-            const bubble = document.createElement('div');
-            bubble.classList.add('chat-bubble');
-
-            // Adjust bubble alignment based on user
-            if (user === username) {
-                bubble.classList.add('me'); // Current user bubble
-            } else {
-                bubble.classList.add('other'); // Other users' bubbles
+        function joinChatRoom() {
+            const code = prompt("Enter the room code:");
+            if (code) {
+                currentRoomCode = code;
+                document.getElementById('roomCodeDisplay').textContent = `Room Code: ${currentRoomCode}`;
+                document.getElementById('chatContainer').innerHTML = ''; // Clear previous messages
             }
+        }
 
-            bubble.textContent = message;
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            if (!message) return;
 
-            // Append profile picture for the user
-            const profilePic = document.createElement('div');
-            profilePic.classList.add('profile-pic');
-            profilePic.style.backgroundImage = `url('path_to_avatar_image_or_placeholder')`; // Replace with actual avatar logic
+            const chatMessage = { username, message };
+            const chatContainer = document.getElementById('chatContainer');
+            const messageContainer = document.createElement('div');
+            const bubble = document.createElement('div');
 
-            messageContainer.appendChild(profilePic);
+            bubble.classList.add('chat-bubble');
+            bubble.classList.add(username === chatMessage.username ? 'me' : 'other');
+            bubble.textContent = chatMessage.message;
+
+            messageContainer.classList.add('message-container');
             messageContainer.appendChild(bubble);
             chatContainer.appendChild(messageContainer);
-            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+            document.getElementById('chatInput').value = ''; // Clear input
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
         }
-
-        // Check for Enter key
-        function checkEnter(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        // Load initial chat messages
-        loadChatMessages();
     </script>
 </body>
 </html>
