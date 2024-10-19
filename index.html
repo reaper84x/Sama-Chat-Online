@@ -60,6 +60,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      width: 100%; /* Ensure full width */
     }
 
     .message {
@@ -68,17 +69,18 @@
       border-radius: 20px;
       max-width: 70%;
       position: relative;
+      word-wrap: break-word; /* Ensure long words wrap */
     }
 
     .message-left {
       background-color: #e0e0e0;
-      align-self: flex-start;
+      align-self: flex-start; /* Align left */
     }
 
     .message-right {
       background-color: #4fc3f7;
       color: white;
-      align-self: flex-end;
+      align-self: flex-end; /* Align right */
     }
 
     .input-container {
@@ -175,23 +177,28 @@
       })
       .then(response => response.json())
       .then(data => {
-        const messages = data.record;
+        const messages = data.record; // Ensure this matches your JSON structure
 
-        messages.forEach(message => {
-          const messageDiv = document.createElement('div');
-          messageDiv.classList.add('message');
+        // Check if messages is an array and iterate
+        if (Array.isArray(messages)) {
+          messages.forEach(message => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
 
-          if (message.email === email) {
-            messageDiv.classList.add('message-right');
-          } else {
-            messageDiv.classList.add('message-left');
-          }
+            if (message.email === email) {
+              messageDiv.classList.add('message-right');
+            } else {
+              messageDiv.classList.add('message-left');
+            }
 
-          messageDiv.textContent = message.text;
-          messageContainer.appendChild(messageDiv);
-        });
+            messageDiv.textContent = message.text;
+            messageContainer.appendChild(messageDiv);
+          });
+        } else {
+          console.error('Message structure is not an array:', messages);
+        }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error('Error fetching messages:', err));
     }
 
     function sendMessage() {
@@ -200,20 +207,20 @@
 
       if (messageText.trim() !== '') {
         const message = { email, text: messageText };
-        
+
         fetch(`https://api.jsonbin.io/v3/b/${jsonBinId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'X-Master-Key': apiKey
           },
-          body: JSON.stringify(message)
+          body: JSON.stringify([message]) // Wrap the message in an array
         })
         .then(() => {
           messageInput.value = '';
-          loadMessages();
+          loadMessages(); // Reload messages after sending
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error('Error sending message:', err));
       }
     }
   </script>
