@@ -1,0 +1,82 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+#welcome {
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border: none;
+    background-color: #6200ee;
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #3700b3;
+}
+
+#joinBox {
+    margin-top: 20px;
+}
+
+#chatroom {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#roomCodeDisplay {
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#chatbox {
+    height: 300px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: white;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: white;
+    background-color: #6200ee;
+    align-self: flex-start;
+    word-wrap: break-word;
+}
+
+.chat-bubble.self {
+    background-color: #03dac5;
+    align-self: flex-end;
+}
+
+#messageInput {
+    width: calc(100% - 80px);
+    padding: 10px;
+}
+
+#sendMessage {
+    padding: 10px 20px;
+  }
