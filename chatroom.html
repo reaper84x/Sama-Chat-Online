@@ -10,75 +10,97 @@
             background-color: #f4f4f4;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
             height: 100vh;
             margin: 0;
         }
-        #chatroom {
-            flex: 1;
+        .header {
+            width: 100%;
             padding: 20px;
-            overflow-y: auto;
-            background-color: #fff;
-        }
-        #message-input {
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            background-color: #f1f1f1;
-        }
-        input {
-            width: 80%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px;
             background-color: #007bff;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            text-align: center;
+            font-size: 18px;
+            position: sticky;
+            top: 0;
         }
-        .message {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
+        #chatroom-code {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #fff;
         }
-        .message .avatar {
+        .chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        .chat-bubble {
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            max-width: 70%;
+            position: relative;
+            display: inline-block;
+        }
+        .chat-bubble.me {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .profile-pic {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
+            display: inline-block;
         }
-        .message .content {
-            padding: 10px;
-            background-color: #f1f1f1;
-            border-radius: 5px;
-        }
-        .message.self {
-            justify-content: flex-end;
-        }
-        .message.self .content {
-            background-color: #007bff;
-            color: white;
+        .chat-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            box-sizing: border-box;
+            border-top: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
-    <div id="chatroom"></div>
-    <div id="message-input">
-        <input type="text" id="message" placeholder="Type a message...">
-        <button onclick="sendMessage()">Send</button>
+
+    <div class="header">
+        Chat Room
+        <div id="chatroom-code"></div>
     </div>
 
+    <div class="chat-container" id="chat-container">
+        <!-- Chat bubbles will be appended here -->
+    </div>
+
+    <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeydown="sendMessage(event)">
+
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomCode = urlParams.get('room');
         const binId = "6713e37dacd3cb34a899bbcb";
         const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO";
 
-        // Fetch messages from the room and display
-        function fetchMessages() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const roomCode = urlParams.get('room');
+
+        const username = localStorage.getItem('username');  // Retrieve the username from localStorage
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const chatroomCodeElement = document.getElementById('chatroom-code');
+
+        // Show room code at the top
+        chatroomCodeElement.textContent = `Room Code: ${roomCode}`;
+
+        // Load chat messages for the current room
+        function loadChatMessages() {
             fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET',
                 headers: {
@@ -86,42 +108,43 @@
                 }
             }).then(response => response.json())
               .then(data => {
-                const chatrooms = data.record.chatrooms || [];
-                const room = chatrooms.find(room => room.roomId === roomCode);
+                  const chatrooms = data.record.chatrooms || [];
+                  const currentRoom = chatrooms.find(room => room.roomId === roomCode);
 
-                const chatroomDiv = document.getElementById('chatroom');
-                chatroomDiv.innerHTML = '';
-
-                if (room) {
-                    room.messages.forEach(message => {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.className = `message ${message.username === localStorage.getItem('username') ? 'self' : ''}`;
-
-                        const avatar = document.createElement('img');
-                        avatar.src = message.avatar || 'https://via.placeholder.com/40';
-                        avatar.className = 'avatar';
-
-                        const content = document.createElement('div');
-                        content.className = 'content';
-                        content.innerText = message.content;
-
-                        messageDiv.appendChild(avatar);
-                        messageDiv.appendChild(content);
-
-                        chatroomDiv.appendChild(messageDiv);
-                    });
-
-                    chatroomDiv.scrollTop = chatroomDiv.scrollHeight;
-                }
-            }).catch(err => console.error(err));
+                  if (currentRoom) {
+                      currentRoom.messages.forEach(message => {
+                          appendMessage(message.username, message.message);
+                      });
+                  }
+              }).catch(err => console.error(err));
         }
 
-        // Send a new message
-        function sendMessage() {
-            const messageInput = document.getElementById('message');
-            const message = messageInput.value.trim();
+        // Append chat bubbles for each message
+        function appendMessage(user, message) {
+            const bubble = document.createElement('div');
+            const profilePic = document.createElement('div');
 
-            if (message) {
+            bubble.classList.add('chat-bubble');
+            bubble.textContent = message;
+
+            profilePic.classList.add('profile-pic');
+            profilePic.style.backgroundImage = `url('path_to_avatar_image_or_placeholder')`;  // Replace with actual avatar logic
+
+            if (user === username) {
+                bubble.classList.add('me');
+            }
+
+            bubble.appendChild(profilePic);
+            chatContainer.appendChild(bubble);
+        }
+
+        // Send a message
+        function sendMessage(event) {
+            if (event.key === 'Enter' && chatInput.value.trim()) {
+                const message = chatInput.value.trim();
+                chatInput.value = '';
+
+                // Send the message to the current chatroom
                 fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                     method: 'GET',
                     headers: {
@@ -129,34 +152,34 @@
                     }
                 }).then(response => response.json())
                   .then(data => {
-                    const chatrooms = data.record.chatrooms || [];
-                    const room = chatrooms.find(room => room.roomId === roomCode);
+                      const chatrooms = data.record.chatrooms || [];
+                      const currentRoom = chatrooms.find(room => room.roomId === roomCode);
 
-                    if (room) {
-                        room.messages.push({
-                            username: localStorage.getItem('username'),
-                            avatar: localStorage.getItem('avatar'),
-                            content: message
-                        });
+                      if (currentRoom) {
+                          currentRoom.messages.push({
+                              username: username,
+                              message: message,
+                              timestamp: new Date().toISOString()
+                          });
 
-                        fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': masterKey
-                            },
-                            body: JSON.stringify({ chatrooms })
-                        }).then(() => {
-                            messageInput.value = '';
-                            fetchMessages();  // Update messages
-                        });
-                    }
-                }).catch(err => console.error(err));
+                          // Update the chatroom in the JSONBin
+                          fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                              method: 'PUT',
+                              headers: {
+                                  'Content-Type': 'application/json',
+                                  'X-Master-Key': masterKey
+                              },
+                              body: JSON.stringify({ chatrooms })
+                          }).then(() => {
+                              appendMessage(username, message);  // Add message to UI
+                          }).catch(err => console.error(err));
+                      }
+                  }).catch(err => console.error(err));
             }
         }
 
-        // Fetch messages every 2 seconds for real-time chat
-        setInterval(fetchMessages, 2000);
+        // Load initial chat messages when entering the room
+        loadChatMessages();
     </script>
 </body>
 </html>
