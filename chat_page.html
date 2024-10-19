@@ -59,9 +59,11 @@
     </div>
 
     <script>
-        // Check if user is logged in
-        if (!localStorage.getItem('isLoggedIn')) {
-            window.location.href = 'login.html'; // Redirect to login page if not logged in
+        // Check for username in localStorage
+        const username = localStorage.getItem('username');
+        if (!username) {
+            alert('You must be logged in to access this page. Please log in.');
+            window.location.href = 'login.html'; // Redirect to the login page
         }
 
         const binId = "6713e37dacd3cb34a899bbcb";
@@ -75,7 +77,6 @@
         // Host a new chat room
         document.getElementById('host-chat-btn').addEventListener('click', () => {
             const roomCode = generateRoomCode();
-            const username = localStorage.getItem('username');
             const newRoom = {
                 roomId: roomCode,
                 roomName: `${username}'s Chat Room`,
