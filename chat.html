@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script> <!-- Include UUID library -->
+</head>
+<body>
+    <h1>Chat</h1>
+    
+    <h2>Create Chatroom</h2>
+    <button id="create-chatroom">Create Chatroom</button>
+    <p id="chatroom-code-display"></p>
+
+    <h2>Join Chatroom</h2>
+    <input type="text" id="chatroom-code" placeholder="Enter chatroom code" required>
+    <button id="join-chatroom">Join Chatroom</button>
+
+    <script>
+        // Create Chatroom Functionality
+        const createChatroomButton = document.getElementById('create-chatroom');
+        createChatroomButton.addEventListener('click', () => {
+            const chatroomCode = uuid.v4(); // Generate a unique code
+            const chatroomData = {
+                code: chatroomCode,
+                users: [], // Store users who join the chatroom
+            };
+
+            fetch('https://api.jsonbin.io/v3/b/67126120ad19ca34f8bab618/collection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC',
+                },
+                body: JSON.stringify(chatroomData),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log('Chatroom created:', data);
+                document.getElementById('chatroom-code-display').innerText = `Chatroom created! Code: ${chatroomCode}`;
+            })
+            .catch((error) => console.error('Error:', error));
+        });
+
+        // Join Chatroom Functionality
+        const joinChatroomButton = document.getElementById('join-chatroom');
+        joinChatroomButton.addEventListener('click', () => {
+            const chatroomCode = document.getElementById('chatroom-code').value;
+
+            fetch('https://api.jsonbin.io/v3/b/67126120ad19ca34f8bab618/collection', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC',
+                },
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                const chatroom = data.find(chatroom => chatroom.code === chatroomCode);
+                if (chatroom) {
+                    // Join the chatroom
+                    console.log('Joined chatroom:', chatroom);
+                    // Display the chat interface or handle chat logic here
+                    alert(`Joined chatroom with code: ${chatroomCode}`);
+                } else {
+                    // Display error message
+                    alert('Invalid chatroom code');
+                }
+            })
+            .catch((error) => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
