@@ -24,11 +24,11 @@
 
             const user = { email, password };
 
-            fetch('https://api.jsonbin.io/v3/b/YOUR_BIN_ID/users', {
+            fetch('https://api.jsonbin.io/v3/b/67126120ad19ca34f8bab618/users', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': 'YOUR_API_KEY',
+                    'X-Master-Key': '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC',
                 },
                 body: JSON.stringify(user),
             })
