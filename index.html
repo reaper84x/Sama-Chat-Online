@@ -61,7 +61,7 @@
       display: flex;
       flex-direction: column;
       width: 90%; /* Adjusted width for better fit */
-      height: 70%; /* Adjusted height */
+      height: 50%; /* Adjusted height for smaller size */
     }
 
     .message {
@@ -183,6 +183,7 @@
 
         // Check if messages is an array and iterate
         if (Array.isArray(messages)) {
+          messageContainer.innerHTML = ''; // Clear previous messages
           messages.forEach(message => {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
@@ -210,6 +211,15 @@
       if (messageText.trim() !== '') {
         const message = { email, text: messageText };
 
+        // Append the new message locally
+        const messageContainer = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add('message-right'); // Current user message
+        messageDiv.textContent = messageText;
+        messageContainer.appendChild(messageDiv);
+        
+        // Send the message to jsonbin
         fetch(`https://api.jsonbin.io/v3/b/${jsonBinId}`, {
           method: 'PUT',
           headers: {
@@ -222,7 +232,7 @@
           }).concat(message)) // Keep previous messages and add the new one
         })
         .then(() => {
-          messageInput.value = '';
+          messageInput.value = ''; // Clear the input field
           loadMessages(); // Reload messages after sending
         })
         .catch(err => console.error('Error sending message:', err));
