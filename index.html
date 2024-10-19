@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatroom</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: space-between;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            font-size: 18px;
+        }
+        .header .title {
+            font-size: 18px;
+        }
+        .chat {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: none; /* Initially hidden */
+        }
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message.user .text {
+            background-color: #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            margin-left: auto;
+        }
+        .message.admin .text {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+        }
+        .footer {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #111;
+        }
+        .footer input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+            background-color: #333;
+            color: #fff;
+        }
+        .footer i {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20%;
+        }
+        #login-form input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+        }
+        #login-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #444;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">ChatGPT</div>
+            <div id="username-display"></div> <!-- Display Username Here -->
+        </div>
+        <div class="chat" id="chat-window">
+            <div id="chat-log"></div>
+            <div class="footer">
+                <input id="message-input" placeholder="Type a message..." type="text"/>
+                <i class="fas fa-paper-plane" id="send-message"></i>
+            </div>
+        </div>
+        <form id="login-form">
+            <input type="text" id="access-code" placeholder="Enter access code">
+            <button id="submit-button">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const accessCodeInput = document.getElementById('access-code');
+        const submitButton = document.getElementById('submit-button');
+        const chatWindow = document.getElementById('chat-window');
+        const chatLog = document.getElementById('chat-log');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-message');
+
+        const binId = "67126120ad19ca34f8bab618"; // Your Bin ID
+        const apiKey = "$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC"; // Your API Key
+        const apiEndpoint = `https://api.jsonbin.io/b/${binId}`;
+
+        submitButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const accessCode = accessCodeInput.value.trim();
+
+            if (accessCode === 'user_access') {
+                joinChatroom('user');
+            } else if (accessCode === 'admin_access') {
+                joinChatroom('admin');
+            } else {
+                alert('Invalid access code');
+            }
+        });
+
+        function joinChatroom(role) {
+            loginForm.style.display = 'none';
+            chatWindow.style.display = 'flex'; // Show chat window
+            localStorage.setItem('role', role);
+            document.getElementById('username-display').innerHTML = `Logged in as ${role}`;
+            initChatroom();
+        }
+
+        function initChatroom() {
+            fetch(`${apiEndpoint}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'secret-key': apiKey,
+                },
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data.messages) {
+                    data.messages = [];
+                }
+                localStorage.setItem('messages', JSON.stringify(data.messages));
+                data.messages.forEach((message) => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    if (message.role === 'user') {
+                        messageElement.classList.add('user');
+                    } else {
+                        messageElement.classList.add('admin');
+                    }
+                    messageElement.innerHTML = `
+                        <div class="text">${message.text}</div>
+                    `;
+                    chatLog.appendChild(messageElement);
+                });
+            })
+            .catch((error) => {
+                console.error('Error initializing chatroom:', error);
+            });
+        }
+
+        function sendMessage(message) {
+            const messages = JSON.parse(localStorage.getItem('messages'));
+            messages.push({ text: message, role: localStorage.getItem('role') });
+            localStorage.setItem('messages', JSON.stringify(messages));
+            fetch(`${apiEndpoint}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'secret-key': apiKey,
+                },
+                body: JSON.stringify({ messages: messages }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                if (localStorage.getItem('role') === 'user') {
+                    messageElement.classList.add('user');
+                } else {
+                    messageElement.classList.add('admin');
+                }
+                messageElement.innerHTML = `
+                    <div class="text">${message}</div>
+                `;
+                chatLog.appendChild(messageElement);
+            })
+            .catch((error) => {
+                console.error('Error sending message:', error);
+            });
+        }
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                sendMessage(message);
+                messageInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
