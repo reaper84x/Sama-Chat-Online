@@ -1,112 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Application</title>
-    <style>
-        /* (Same CSS as before) */
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatroom with Login</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    .login-container, .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      background-color: #f4f7f9;
+    }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f4f7f9;
+    }
+
+    .login-box {
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #fff;
+    }
+
+    .login-box input {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .login-box button {
+      padding: 10px 20px;
+      background-color: #4fc3f7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .messages {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px 20px;
+      border-radius: 20px;
+      max-width: 70%;
+      position: relative;
+    }
+
+    .message-left {
+      background-color: #e0e0e0;
+      align-self: flex-start;
+    }
+
+    .message-right {
+      background-color: #4fc3f7;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .input-container {
+      padding: 10px;
+      background-color: #ffffff;
+      display: flex;
+    }
+
+    .input-container input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+    }
+
+    .input-container button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      background-color: #4fc3f7;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    /* Full-size chat box for mobile */
+    @media (max-width: 768px) {
+      .chat-container {
+        height: 100vh;
+      }
+
+      .input-container input {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Chat Application</h1>
-        <div id="login-form">
-            <input type="email" id="email-input" placeholder="Email" required>
-            <input type="password" id="password-input" placeholder="Password" required>
-            <button onclick="login()">Login</button>
-        </div>
-        <div id="chat-messages" style="display: none;"></div>
-        <div id="chat-input" style="display: none;">
-            <input type="text" id="message-input" placeholder="Type your message...">
-            <button onclick="sendMessage()">Send</button>
-        </div>
+  <div class="login-container" id="login-container">
+    <div class="login-box">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
     </div>
+  </div>
 
-    <script>
-        let currentUser  = '';
-        const binId = '67126120ad19ca34f8bab618'; // Your bin ID
-        const masterKey = '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC'; // Your master key
+  <div class="chat-container" id="chat-container" style="display: none;">
+    <div class="messages" id="message-container">
+      <!-- Messages will be dynamically added here -->
+    </div>
+    <div class="input-container">
+      <input type="text" id="message-input" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
 
-        function login() {
-            const email = document.getElementById('email-input').value.trim();
-            const password = document.getElementById('password-input').value;
+  <script>
+    let email, password;
+    const jsonBinId = '67126120ad19ca34f8bab618'; // Your bin ID
+    const apiKey = '$2a$10$ZhyLvqnODp6F/m/31TwrJOhkAgF2YwNkVT4EwBlXEn.eJWdvTMnRC'; // Your API key
 
-            if ((email === 'salmangroovin@gmail.com' && password === 'salman.00') || 
-                (email === 'salmanvibin@gmail.com' && password === 'rinty.00')) {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('chat-messages').style.display = 'block';
-                document.getElementById('chat-input').style.display = 'flex';
-                currentUser  = email.split('@')[0];
-                console.log('Login successful');
-                loadMessages(); // Load existing messages
-            } else {
-                alert('Invalid email or password. Please try again.');
-                console.log('Login failed');
-            }
+    // Simulating login validation
+    const validUsers = [
+      { email: 'salmangroovin@gmail.com', password: 'salman.00' },
+      { email: 'salmanvibin@gmail.com', password: 'rinty.00' }
+    ];
+
+    function login() {
+      email = document.getElementById('email').value;
+      password = document.getElementById('password').value;
+
+      // Check if the credentials are valid
+      const user = validUsers.find(user => user.email === email && user.password === password);
+      
+      if (user) {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('chat-container').style.display = 'flex';
+        loadMessages();
+      } else {
+        alert('Invalid login. Please try again.');
+      }
+    }
+
+    // Load messages from jsonbin.io
+    function loadMessages() {
+      const messageContainer = document.getElementById('message-container');
+
+      fetch(`https://api.jsonbin.io/v3/b/${jsonBinId}/latest`, {
+        headers: {
+          'X-Master-Key': apiKey
         }
+      })
+      .then(response => response.json())
+      .then(data => {
+        const messages = data.record;
 
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value.trim();
+        messages.forEach(message => {
+          const messageDiv = document.createElement('div');
+          messageDiv.classList.add('message');
 
-            if (message !== '') {
-                const chatMessages = document.getElementById('chat-messages');
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message ' + currentUser ;
-                messageElement.textContent = message;
-                chatMessages.appendChild(messageElement);
-                messageInput.value = '';
+          if (message.email === email) {
+            messageDiv.classList.add('message-right');
+          } else {
+            messageDiv.classList.add('message-left');
+          }
 
-                // Store message in JSON.io
-                storeMessage(currentUser , message);
-            }
-        }
+          messageDiv.textContent = message.text;
+          messageContainer.appendChild(messageDiv);
+        });
+      })
+      .catch(err => console.error(err));
+    }
 
-        function storeMessage(user, message) {
-            const data = {
-                user: user,
-                message: message
-            };
+    function sendMessage() {
+      const messageInput = document.getElementById('message-input');
+      const messageText = messageInput.value;
 
-            fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': masterKey
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Message stored:', data);
-            })
-            .catch((error) => {
-                console.error('Error storing message:', error);
-            });
-        }
-
-        function loadMessages() {
-            fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Master-Key': masterKey
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const chatMessages = document.getElementById('chat-messages');
-                data.record.forEach(msg => {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'message ' + msg.user;
-                    messageElement.textContent = msg.message;
-                    chatMessages.appendChild(messageElement);
- });
-            })
-            .catch((error) => {
-                console.error('Error loading messages:', error);
-            });
-        }
-    </script>
+      if (messageText.trim() !== '') {
+        const message = { email, text: messageText };
+        
+        fetch(`https://api.jsonbin.io/v3/b/${jsonBinId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': apiKey
+          },
+          body: JSON.stringify(message)
+        })
+        .then(() => {
+          messageInput.value = '';
+          loadMessages();
+        })
+        .catch(err => console.error(err));
+      }
+    }
+  </script>
 </body>
 </html>
