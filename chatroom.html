@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #chatroom {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        #message-input {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            background-color: #f1f1f1;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .message {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .message .content {
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+        .message.self {
+            justify-content: flex-end;
+        }
+        .message.self .content {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatroom"></div>
+    <div id="message-input">
+        <input type="text" id="message" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomCode = urlParams.get('room');
+        const binId = "6713e37dacd3cb34a899bbcb";
+        const masterKey = "$2a$10$SjhSiTDW101gGwgR2EMuSeimya/ER6HzCFxrwOkhtxONDwVyeCpPO";
+
+        // Fetch messages from the room and display
+        function fetchMessages() {
+            fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': masterKey
+                }
+            }).then(response => response.json())
+              .then(data => {
+                const chatrooms = data.record.chatrooms || [];
+                const room = chatrooms.find(room => room.roomId === roomCode);
+
+                const chatroomDiv = document.getElementById('chatroom');
+                chatroomDiv.innerHTML = '';
+
+                if (room) {
+                    room.messages.forEach(message => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${message.username === localStorage.getItem('username') ? 'self' : ''}`;
+
+                        const avatar = document.createElement('img');
+                        avatar.src = message.avatar || 'https://via.placeholder.com/40';
+                        avatar.className = 'avatar';
+
+                        const content = document.createElement('div');
+                        content.className = 'content';
+                        content.innerText = message.content;
+
+                        messageDiv.appendChild(avatar);
+                        messageDiv.appendChild(content);
+
+                        chatroomDiv.appendChild(messageDiv);
+                    });
+
+                    chatroomDiv.scrollTop = chatroomDiv.scrollHeight;
+                }
+            }).catch(err => console.error(err));
+        }
+
+        // Send a new message
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value.trim();
+
+            if (message) {
+                fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': masterKey
+                    }
+                }).then(response => response.json())
+                  .then(data => {
+                    const chatrooms = data.record.chatrooms || [];
+                    const room = chatrooms.find(room => room.roomId === roomCode);
+
+                    if (room) {
+                        room.messages.push({
+                            username: localStorage.getItem('username'),
+                            avatar: localStorage.getItem('avatar'),
+                            content: message
+                        });
+
+                        fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': masterKey
+                            },
+                            body: JSON.stringify({ chatrooms })
+                        }).then(() => {
+                            messageInput.value = '';
+                            fetchMessages();  // Update messages
+                        });
+                    }
+                }).catch(err => console.error(err));
+            }
+        }
+
+        // Fetch messages every 2 seconds for real-time chat
+        setInterval(fetchMessages, 2000);
+    </script>
+</body>
+</html>
