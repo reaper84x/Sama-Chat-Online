@@ -65,6 +65,7 @@
             flex-direction: column;
             height: 400px;
             overflow-y: auto;
+            margin-bottom: 10px;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
@@ -106,15 +107,12 @@
     async function login() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        console.log('Attempting to log in with:', { email, password });
 
         const { user, error } = await supabaseClient.auth.signIn({ email, password });
         
         if (error) {
-            console.error('Login error:', error);
             alert('Login failed: ' + error.message);
         } else {
-            console.log('Logged in user:', user);
             renderChatOptions(); // Redirect to chat options after successful login
         }
     }
@@ -122,8 +120,9 @@
     async function register() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { user, error } = await supabaseClient.auth.signUp({ email, password });
         
+        const { user, error } = await supabaseClient.auth.signUp({ email, password });
+
         if (error) {
             alert('Registration failed: ' + error.message);
         } else {
@@ -159,24 +158,22 @@
 
     async function joinChatRoom() {
         const chatRoomCode = prompt('Enter Chat Room Code');
-        renderChatRoom(chatRoomCode);
+        if (chatRoomCode) {
+            renderChatRoom(chatRoomCode);
+        } else {
+            alert('Chat room code is required.');
+        }
     }
 
     async function renderChatRoom(roomCode) {
-        const chatContainer = document.createElement('div');
-        chatContainer.className = 'chat-container';
-        const inputContainer = document.createElement('div');
-        const messageInput = document.createElement('input');
-        messageInput.type = 'text';
-        messageInput.placeholder = 'Type your message...';
-        const sendButton = document.createElement('button');
-        sendButton.innerText = 'Send';
-        sendButton.onclick = () => sendMessage(roomCode, messageInput.value);
-        inputContainer.appendChild(messageInput);
-        inputContainer.appendChild(sendButton);
-        document.getElementById('root').innerHTML = '';
-        document.getElementById('root').appendChild(chatContainer);
-        document.getElementById('root').appendChild(inputContainer);
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <h2>Chat Room: ${roomCode}</h2>
+                <div class="chat-container" id="chat-container"></div>
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button onclick="sendMessage('${roomCode}')">Send</button>
+            </div>
+        `;
         loadMessages(roomCode);
     }
 
@@ -186,7 +183,7 @@
         if (error) {
             alert('Error loading messages: ' + error.message);
         } else {
-            const chatContainer = document.querySelector('.chat-container');
+            const chatContainer = document.getElementById('chat-container');
             chatContainer.innerHTML = '';
             data.forEach(message => {
                 const bubble = document.createElement('div');
@@ -198,13 +195,16 @@
         }
     }
 
-    async function sendMessage(roomCode, messageContent) {
+    async function sendMessage(roomCode) {
+        const messageContent = document.getElementById('messageInput').value;
         if (!messageContent) return;
+
         const { error } = await supabaseClient.from('messages').insert([{ room_code: roomCode, user_id: supabaseClient.auth.user().id, content: messageContent }]);
         
         if (error) {
             alert('Error sending message: ' + error.message);
         } else {
+            document.getElementById('messageInput').value = ''; // Clear input
             loadMessages(roomCode); // Reload messages after sending
         }
     }
