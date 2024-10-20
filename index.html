@@ -7,20 +7,19 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            background-color: #f4f4f4;
         }
         .container {
-            background: white;
+            width: 300px;
             padding: 20px;
+            background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
         }
         input {
             width: 100%;
@@ -41,184 +40,97 @@
         button:hover {
             background: #0056b3;
         }
-        .chat-bubble {
-            padding: 10px;
-            border-radius: 15px;
-            margin: 5px;
-            max-width: 75%;
-            display: inline-block;
-            position: relative;
-            animation: float 3s ease-in-out infinite;
-        }
-        .my-message {
-            background-color: #d1e7dd;
-            margin-left: auto;
-        }
-        .other-message {
-            background-color: #f8d7da;
-            margin-right: auto;
-        }
-        @keyframes float {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0); }
-        }
-        .chat-container {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
 </head>
 <body>
 
-<div id="app"></div>
+<div id="root"></div>
 
 <script>
     const { createClient } = supabase;
-    const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your actual anon key
+    const supabaseUrl = 'https://YOUR_SUPABASE_URL'; // Replace with your Supabase URL
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase key
     const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-    // Render the login form
-    function showLogin() {
-        document.getElementById('app').innerHTML = `
+    async function renderLoginForm() {
+        document.getElementById('root').innerHTML = `
             <div class="container">
                 <h2>Login</h2>
                 <input type="email" id="loginEmail" placeholder="Email" required>
                 <input type="password" id="loginPassword" placeholder="Password" required>
-                <button onclick="loginUser()">Login</button>
-                <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+                <button onclick="login()">Login</button>
+                <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
             </div>
         `;
     }
 
-    // Render the registration form
-    function showRegister() {
-        document.getElementById('app').innerHTML = `
+    async function renderRegisterForm() {
+        document.getElementById('root').innerHTML = `
             <div class="container">
                 <h2>Register</h2>
                 <input type="email" id="registerEmail" placeholder="Email" required>
                 <input type="password" id="registerPassword" placeholder="Password" required>
-                <button onclick="registerUser()">Register</button>
-                <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
             </div>
         `;
     }
 
-    // Register a new user
-    async function registerUser() {
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-
-        const { user, error } = await supabaseClient.auth.signUp({ email, password });
-
-        if (error) {
-            alert('Error registering: ' + error.message);
-        } else {
-            alert('Registration successful. You can log in now.');
-            showLogin();
-        }
-    }
-
-    // Log in a user
-    async function loginUser() {
+    async function login() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-
-        const { user, error } = await supabaseClient.auth.signIn({ email, password });
-
+        const { error } = await supabaseClient.auth.signIn({ email, password });
         if (error) {
-            alert('Error logging in: ' + error.message);
+            alert('Login failed: ' + error.message);
         } else {
-            showChatRoomOptions();
+            renderChatOptions();
         }
     }
 
-    // Show chat room options
-    function showChatRoomOptions() {
-        document.getElementById('app').innerHTML = `
+    async function register() {
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const { user, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            alert('Registration failed: ' + error.message);
+        } else {
+            alert('Registration successful. You can now log in.');
+            renderLoginForm();
+        }
+    }
+
+    async function renderChatOptions() {
+        document.getElementById('root').innerHTML = `
             <div class="container">
-                <h2>Chat Room Options</h2>
+                <h2>Chat Options</h2>
                 <button onclick="createChatRoom()">Create Chat Room</button>
                 <button onclick="joinChatRoom()">Join Chat Room</button>
             </div>
         `;
     }
 
-    // Create a new chat room
     async function createChatRoom() {
-        const roomCode = prompt('Enter a unique chat room code:');
-        if (!roomCode) return alert('Chat room code is required.');
-
-        const { error } = await supabaseClient.from('chat_rooms').insert([{ room_code: roomCode }]);
-        
+        const chatRoomName = prompt('Enter Chat Room Name');
+        const { data, error } = await supabaseClient.from('rooms').insert([{ name: chatRoomName }]);
         if (error) {
             alert('Error creating chat room: ' + error.message);
         } else {
-            alert('Chat room created with code: ' + roomCode);
-            showChatRoom(roomCode);
+            alert('Chat room created: ' + data[0].name);
         }
     }
 
-    // Join an existing chat room
     async function joinChatRoom() {
-        const roomCode = prompt('Enter chat room code:');
-        if (!roomCode) return alert('Chat room code is required.');
-
-        showChatRoom(roomCode);
-    }
-
-    // Render chat room
-    function showChatRoom(roomCode) {
-        document.getElementById('app').innerHTML = `
-            <div class="container">
-                <h2>Chat Room: ${roomCode}</h2>
-                <div class="chat-container" id="chatContainer"></div>
-                <input type="text" id="messageInput" placeholder="Type your message...">
-                <button onclick="sendMessage('${roomCode}')">Send</button>
-            </div>
-        `;
-        loadMessages(roomCode);
-    }
-
-    // Load messages from chat room
-    async function loadMessages(roomCode) {
-        const { data, error } = await supabaseClient.from('messages').select('*').eq('room_code', roomCode);
-        
-        if (error) {
-            alert('Error loading messages: ' + error.message);
+        const chatRoomName = prompt('Enter Chat Room Name');
+        const { data, error } = await supabaseClient.from('rooms').select('*').eq('name', chatRoomName);
+        if (error || data.length === 0) {
+            alert('Invalid chat room name');
         } else {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.innerHTML = '';
-            data.forEach(message => {
-                const bubble = document.createElement('div');
-                bubble.className = 'chat-bubble ' + (message.user_id === supabaseClient.auth.user().id ? 'my-message' : 'other-message');
-                bubble.innerText = message.content;
-                chatContainer.appendChild(bubble);
-            });
-            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+            alert('Joined chat room: ' + data[0].name);
         }
     }
 
-    // Send a message to the chat room
-    async function sendMessage(roomCode) {
-        const messageContent = document.getElementById('messageInput').value;
-        if (!messageContent) return;
-
-        const { error } = await supabaseClient.from('messages').insert([{ room_code: roomCode, user_id: supabaseClient.auth.user().id, content: messageContent }]);
-        
-        if (error) {
-            alert('Error sending message: ' + error.message);
-        } else {
-            document.getElementById('messageInput').value = ''; // Clear input
-            loadMessages(roomCode); // Reload messages after sending
-        }
-    }
-
-    // Initialize the app by showing the login form
-    showLogin();
+    renderLoginForm();
 </script>
 
 </body>
