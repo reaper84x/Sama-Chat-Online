@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
+</head>
+<body>
+    <div class="container" id="root"></div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_KEY';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        async function renderProfileForm() {
+            document.getElementById('root').innerHTML = `
+                <h2>Update Profile</h2>
+                <input type="text" id="name" placeholder="Name">
+                <input type="text" id="location" placeholder="Location">
+                <button onclick="saveProfile()">Save Profile</button>
+            `;
+        }
+
+        async function saveProfile() {
+            const user = supabaseClient.auth.user();
+            const name = document.getElementById('name').value;
+            const location = document.getElementById('location').value;
+
+            const { error } = await supabaseClient.from('users').upsert({
+                id: user.id, // Ensure to set the user ID for the profile
+                name,
+                location
+            });
+
+            if (error) {
+                alert('Profile update failed: ' + error.message);
+            } else {
+                alert('Profile updated successfully!');
+                window.location.href = "chatroom.html"; // Redirect to chatroom options
+            }
+        }
+
+        renderProfileForm();
+    </script>
+</body>
+</html>
