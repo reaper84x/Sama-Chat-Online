@@ -5,15 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Application</title>
     <style>
-        .container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        h2 {
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
             text-align: center;
         }
         input {
@@ -21,26 +28,30 @@
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 3px;
         }
         button {
-            width: 100%;
-            padding: 10px;
             background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 4px;
+            padding: 10px;
+            border-radius: 3px;
             cursor: pointer;
+            width: 100%;
         }
         button:hover {
             background-color: #0056b3;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
         const { createClient } = supabase;
         const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+        const supabaseKey = 'YOUR_SUPABASE_KEY_HERE'; // Replace with your actual key
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
         async function renderLoginForm() {
@@ -70,41 +81,51 @@
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            const { user, error } = await supabaseClient.auth.signIn({ email, password });
-
+            const { error } = await supabaseClient.auth.signIn({ email, password });
             if (error) {
                 alert('Login failed: ' + error.message);
-            } else if (user && !user.email_confirmed_at) {
-                alert('Your email is not confirmed. Please check your inbox for the confirmation email.');
             } else {
-                renderProfilePage(); // Proceed to the profile page if logged in successfully
+                alert('Login successful!');
+                renderProfilePage();
             }
         }
 
         async function register() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            const { user, error } = await supabaseClient.auth.signUp({ email, password });
-
+            const { error } = await supabaseClient.auth.signUp({ email, password });
             if (error) {
                 alert('Registration failed: ' + error.message);
             } else {
-                alert('Registration successful! Please check your email to confirm your account.');
-                renderLoginForm(); // Redirect to login form
+                alert('Registration successful! Please check your email for confirmation.');
+                renderLoginForm();
             }
         }
 
         async function renderProfilePage() {
+            const user = supabaseClient.auth.user();
+            const { data: profile, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                alert('Error fetching profile: ' + error.message);
+                return;
+            }
+
             document.getElementById('root').innerHTML = `
                 <div class="container">
-                    <h2>Update Profile</h2>
-                    <input type="text" id="name" placeholder="Name">
-                    <input type="text" id="location" placeholder="Location">
-                    <input type="text" id="sex" placeholder="Sex">
-                    <input type="text" id="education" placeholder="Education">
+                    <h2>Profile Page</h2>
+                    <p>Welcome, ${user.email}!</p>
+                    <input type="text" id="name" placeholder="Name" value="${profile.name || ''}">
+                    <input type="text" id="location" placeholder="Location" value="${profile.location || ''}">
+                    <input type="text" id="sex" placeholder="Sex" value="${profile.sex || ''}">
+                    <input type="text" id="education" placeholder="Education" value="${profile.education || ''}">
                     <button onclick="saveProfile()">Save Profile</button>
+                    <button onclick="renderChatOptions()">Go to Chat</button>
+                    <button onclick="logout()">Logout</button>
                 </div>
             `;
         }
@@ -116,20 +137,26 @@
             const sex = document.getElementById('sex').value;
             const education = document.getElementById('education').value;
 
-            const { error } = await supabaseClient.from('users').update({
-                name, location, sex, education
-            }).eq('id', user.id);
+            const { error } = await supabaseClient.from('users').upsert({
+                id: user.id,
+                name,
+                location,
+                sex,
+                education
+            });
 
             if (error) {
-                alert('Profile update failed');
+                alert('Profile update failed: ' + error.message);
             } else {
-                renderChatOptions();
+                alert('Profile updated successfully!');
+                renderProfilePage();
             }
         }
 
         async function renderChatOptions() {
             document.getElementById('root').innerHTML = `
                 <div class="container">
+                    <h2>Chat Options</h2>
                     <button onclick="createChatRoom()">Create Chat Room</button>
                     <button onclick="joinChatRoom()">Join Chat Room</button>
                 </div>
@@ -137,25 +164,69 @@
         }
 
         async function createChatRoom() {
-            const { data, error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, message: 'Chat Room Created' }]);
+            const { data, error } = await supabaseClient.from('rooms').insert([{ user_id: supabaseClient.auth.user().id, created_at: new Date() }]);
             if (error) {
-                alert('Error creating chat room');
+                alert('Error creating chat room: ' + error.message);
             } else {
-                alert('Chat room created with code: ' + data[0].id);
+                alert('Chat room created with ID: ' + data[0].id);
             }
         }
 
         async function joinChatRoom() {
-            const chatRoomCode = prompt('Enter Chat Room Code');
-            const { data, error } = await supabaseClient.from('messages').select('*').eq('id', chatRoomCode);
+            const chatRoomCode = prompt('Enter Chat Room ID');
+            const { data, error } = await supabaseClient.from('rooms').select('*').eq('id', chatRoomCode);
             if (error || data.length === 0) {
-                alert('Invalid chat room code');
+                alert('Invalid chat room ID');
             } else {
                 alert('Joined chat room: ' + chatRoomCode);
+                renderChatRoom(chatRoomCode);
             }
         }
 
-        // Initial call to render the login form
+        async function renderChatRoom(roomId) {
+            document.getElementById('root').innerHTML = `
+                <div class="container">
+                    <h2>Chat Room: ${roomId}</h2>
+                    <div id="messages"></div>
+                    <input type="text" id="message" placeholder="Type a message...">
+                    <button onclick="sendMessage('${roomId}')">Send</button>
+                    <button onclick="renderChatOptions()">Back</button>
+                </div>
+            `;
+            fetchMessages(roomId);
+        }
+
+        async function sendMessage(roomId) {
+            const message = document.getElementById('message').value;
+            const { error } = await supabaseClient.from('messages').insert([{ room_id: roomId, user_id: supabaseClient.auth.user().id, content: message, created_at: new Date() }]);
+            if (error) {
+                alert('Error sending message: ' + error.message);
+            } else {
+                document.getElementById('message').value = ''; // Clear the input
+                fetchMessages(roomId); // Refresh messages
+            }
+        }
+
+        async function fetchMessages(roomId) {
+            const { data, error } = await supabaseClient.from('messages').select('*').eq('room_id', roomId);
+            if (error) {
+                alert('Error fetching messages: ' + error.message);
+                return;
+            }
+
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = ''; // Clear previous messages
+
+            data.forEach(msg => {
+                messagesDiv.innerHTML += `<p><strong>${msg.user_id}</strong>: ${msg.content}</p>`;
+            });
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            renderLoginForm();
+        }
+
         renderLoginForm();
     </script>
 </head>
