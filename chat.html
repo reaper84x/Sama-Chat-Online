@@ -1,120 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f4f8;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      height: 100vh;
-      margin: 0;
-    }
-    .chat-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px 8px 0 0;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-      overflow-y: scroll;
-      flex-grow: 1;
-    }
-    .message {
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 5px 0;
-      max-width: 70%;
-    }
-    .message.sender {
-      background-color: #6c757d;
-      align-self: flex-end;
-    }
-    .chat-input {
-      display: flex;
-      padding: 10px;
-      background-color: #f0f4f8;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      cursor: pointer;
-      margin-left: 10px;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js" defer></script>
 </head>
 <body>
+    <div class="chat-container">
+        <h2>Chat with <span id="chatUserName"></span></h2>
+        <div id="messagesList"></div>
+        <input type="text" id="messageInput" placeholder="Type a message..." required>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
-  <div class="chat-container" id="chatBox">
-    <!-- Messages will be dynamically added here -->
-  </div>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG42YN-F5gkSUu_rLl9zFe9bWyHts01-4",
+            authDomain: "chat-hub-7b108.firebaseapp.com",
+            projectId: "chat-hub-7b108",
+            storageBucket: "chat-hub-7b108.appspot.com",
+            messagingSenderId: "214941914454",
+            appId: "1:214941914454:web:9840f1390831b82f3272f7"
+        };
 
-  <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-  <script type="module">
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        const chatUser = localStorage.getItem('chatUser'); // The user you're chatting with
+        const secretKey = localStorage.getItem('secretKey');
+        document.getElementById('chatUserName').innerText = chatUser;
 
-    const db = getDatabase();
-    const chatId = localStorage.getItem('chatId');
-    const secretKey = localStorage.getItem('secretKey');
-    const chatRef = ref(db, 'chats/' + chatId + '/messages');
+        const messagesRef = ref(db, 'chats/' + secretKey + '/' + chatUser);
 
-    const chatBox = document.getElementById('chatBox');
+        onValue(messagesRef, (snapshot) => {
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = ''; // Clear the list
 
-    // Load messages in real-time
-    onValue(chatRef, (snapshot) => {
-      chatBox.innerHTML = ''; // Clear old messages
-      snapshot.forEach((childSnapshot) => {
-        const message = childSnapshot.val();
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        if (message.sender === secretKey) {
-          messageDiv.classList.add('sender');
+            snapshot.forEach((childSnapshot) => {
+                const message = childSnapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message.message; // Adjust this to display the desired message
+                messagesList.appendChild(messageDiv);
+            });
+        });
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (message === '') {
+                alert('Message cannot be empty.');
+                return;
+            }
+
+            push(messagesRef, { message: message }).then(() => {
+                messageInput.value = ''; // Clear input after sending
+            });
         }
-        messageDiv.textContent = `${message.senderName}: ${message.text}`;
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the latest message
-      });
-    });
-
-    // Send a message
-    function sendMessage() {
-      const messageInput = document.getElementById('messageInput');
-      const messageText = messageInput.value.trim();
-      if (messageText === '') return;
-
-      const newMessageRef = push(chatRef);
-      newMessageRef.set({
-        text: messageText,
-        sender: secretKey,
-        senderName: localStorage.getItem('username'),
-        timestamp: Date.now()
-      });
-
-      messageInput.value = ''; // Clear the input field
-    }
-  </script>
-
+    </script>
 </body>
 </html>
