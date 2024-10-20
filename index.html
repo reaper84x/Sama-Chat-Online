@@ -53,14 +53,13 @@
 </head>
 <body>
 
-    <!-- HTML Structure -->
     <div id="root"></div>
 
     <script>
         // JavaScript Code (Supabase configuration and functions)
         document.addEventListener("DOMContentLoaded", function() {
             const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+            const supabaseKey = 'your-supabase-key'; // Replace with your actual key
             const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
             // Render login form
@@ -70,23 +69,12 @@
                         <h2>Login</h2>
                         <input type="email" id="email" placeholder="Email">
                         <input type="password" id="password" placeholder="Password">
-                        <button onclick="login()">Login</button>
-                        <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
+                        <button id="login-btn">Login</button>
+                        <p>Don't have an account? <a href="#" id="register-link">Register</a></p>
                     </div>
                 `;
-            }
-
-            // Login function
-            async function login() {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const { error } = await supabaseClient.auth.signIn({ email, password });
-                if (error) {
-                    alert('Login failed');
-                } else {
-                    alert('Logged in successfully');
-                    // Proceed to next steps
-                }
+                document.getElementById('login-btn').addEventListener('click', login);
+                document.getElementById('register-link').addEventListener('click', renderRegisterForm);
             }
 
             // Render registration form
@@ -96,10 +84,24 @@
                         <h2>Register</h2>
                         <input type="email" id="email" placeholder="Email">
                         <input type="password" id="password" placeholder="Password">
-                        <button onclick="register()">Register</button>
-                        <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
+                        <button id="register-btn">Register</button>
+                        <p>Already have an account? <a href="#" id="login-link">Login</a></p>
                     </div>
                 `;
+                document.getElementById('register-btn').addEventListener('click', register);
+                document.getElementById('login-link').addEventListener('click', renderLoginForm);
+            }
+
+            // Login function
+            async function login() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const { error } = await supabaseClient.auth.signIn({ email, password });
+                if (error) {
+                    alert('Login failed: ' + error.message);
+                } else {
+                    renderProfilePage();
+                }
             }
 
             // Register function
@@ -108,10 +110,83 @@
                 const password = document.getElementById('password').value;
                 const { error } = await supabaseClient.auth.signUp({ email, password });
                 if (error) {
-                    alert('Registration failed');
+                    alert('Registration failed: ' + error.message);
                 } else {
-                    alert('Registration successful');
-                    // Proceed to next steps
+                    alert('Registration successful. Please log in.');
+                    renderLoginForm();
+                }
+            }
+
+            // Render profile page
+            async function renderProfilePage() {
+                const user = supabaseClient.auth.user();
+                const { data } = await supabaseClient.from('users').select('*').eq('id', user.id).single();
+                document.getElementById('root').innerHTML = `
+                    <div class="container">
+                        <h2>Update Profile</h2>
+                        <input type="text" id="name" placeholder="Name" value="${data ? data.name : ''}">
+                        <input type="text" id="location" placeholder="Location" value="${data ? data.location : ''}">
+                        <input type="text" id="sex" placeholder="Sex" value="${data ? data.sex : ''}">
+                        <input type="text" id="education" placeholder="Education" value="${data ? data.education : ''}">
+                        <button id="save-btn">Save Profile</button>
+                        <button id="chat-options-btn">Go to Chat</button>
+                    </div>
+                `;
+                document.getElementById('save-btn').addEventListener('click', saveProfile);
+                document.getElementById('chat-options-btn').addEventListener('click', renderChatOptions);
+            }
+
+            // Save profile function
+            async function saveProfile() {
+                const user = supabaseClient.auth.user();
+                const name = document.getElementById('name').value;
+                const location = document.getElementById('location').value;
+                const sex = document.getElementById('sex').value;
+                const education = document.getElementById('education').value;
+                const { error } = await supabaseClient.from('users').update({
+                    name, location, sex, education
+                }).eq('id', user.id);
+
+                if (error) {
+                    alert('Profile update failed: ' + error.message);
+                } else {
+                    alert('Profile updated successfully');
+                    renderChatOptions();
+                }
+            }
+
+            // Render chat options
+            function renderChatOptions() {
+                document.getElementById('root').innerHTML = `
+                    <div class="container">
+                        <h2>Chat Options</h2>
+                        <button id="create-chat-btn">Create Chat Room</button>
+                        <button id="join-chat-btn">Join Chat Room</button>
+                    </div>
+                `;
+                document.getElementById('create-chat-btn').addEventListener('click', createChatRoom);
+                document.getElementById('join-chat-btn').addEventListener('click', joinChatRoom);
+            }
+
+            // Create chat room
+            async function createChatRoom() {
+                const { data, error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, message: 'Chat Room Created' }]);
+                if (error) {
+                    alert('Error creating chat room: ' + error.message);
+                } else {
+                    alert('Chat room created with code: ' + data[0].id);
+                }
+            }
+
+            // Join chat room
+            async function joinChatRoom() {
+                const chatRoomCode = prompt('Enter Chat Room Code');
+                const { data, error } = await supabaseClient.from('messages').select('*').eq('id', chatRoomCode);
+                if (error || data.length === 0) {
+                    alert('Invalid chat room code');
+                } else {
+                    alert('Joined chat room: ' + chatRoomCode);
+                    // Add functionality for chatting in the room here
                 }
             }
 
