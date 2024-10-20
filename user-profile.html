@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        /* General styles for the user profile page */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background: #f7f3ff; /* Light lavender background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .user-profile-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+            animation: zoomIn 0.6s ease-in-out;
+        }
+
+        .user-profile-container h2 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #7d5fff; /* Vibrant purple for titles */
+        }
+
+        .user-profile-container p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #555; /* Darker text color */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #ff6f61; /* Modern coral */
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #f5564e;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="user-profile-container">
+        <h2>User Profile</h2>
+        <p id="usernameDisplay">Username: <span></span></p>
+        <button onclick="sendMessage()">Chat</button>
+        <button onclick="goBack()">Back</button>
+    </div>
+
+    <script>
+        // Get the Supabase client
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co'; // Replace with your Supabase URL
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase Key
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Load user profile on page load
+        window.onload = async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const urlParams = new URLSearchParams(window.location.search);
+            const usernameToSearch = urlParams.get('username');
+
+            if (user && usernameToSearch) {
+                // Fetch user data from Supabase
+                const { data, error } = await supabase
+                    .from('users') // Replace with your users table name later
+                    .select('username') // Only fetch username to keep secret key hidden
+                    .eq('username', usernameToSearch)
+                    .single();
+
+                if (error || !data) {
+                    alert('User not found!');
+                    window.location.href = 'homepage.html'; // Redirect back to homepage if user not found
+                } else {
+                    document.querySelector('#usernameDisplay span').textContent = data.username;
+                }
+            } else {
+                alert('User not found! Please login again.');
+                window.location.href = 'login.html'; // Redirect to login if no user found
+            }
+        };
+
+        // Function to send a message
+        function sendMessage() {
+            const recipientUsername = document.querySelector('#usernameDisplay span').textContent;
+            // Redirect to chat page or open a modal for sending messages
+            window.location.href = `chat.html?recipient=${recipientUsername}`; // Redirect to chat page with recipient info
+        }
+
+        // Function to go back to the homepage
+        function goBack() {
+            window.location.href = 'homepage.html'; // Redirect to homepage
+        }
+    </script>
+</body>
+</html>
