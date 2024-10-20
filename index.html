@@ -3,135 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Application</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 300px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-    </style>
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
 </head>
 <body>
+    <div class="container" id="root"></div>
 
-<div id="root"></div>
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_KEY';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-<script>
-    const { createClient } = supabase;
-    const supabaseUrl = 'https://YOUR_SUPABASE_URL'; // Replace with your Supabase URL
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase key
-    const supabaseClient = createClient(supabaseUrl, supabaseKey);
-
-    async function renderLoginForm() {
-        document.getElementById('root').innerHTML = `
-            <div class="container">
+        async function renderLoginForm() {
+            document.getElementById('root').innerHTML = `
                 <h2>Login</h2>
-                <input type="email" id="loginEmail" placeholder="Email" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
                 <button onclick="login()">Login</button>
-                <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
-            </div>
-        `;
-    }
-
-    async function renderRegisterForm() {
-        document.getElementById('root').innerHTML = `
-            <div class="container">
-                <h2>Register</h2>
-                <input type="email" id="registerEmail" placeholder="Email" required>
-                <input type="password" id="registerPassword" placeholder="Password" required>
-                <button onclick="register()">Register</button>
-                <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
-            </div>
-        `;
-    }
-
-    async function login() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const { error } = await supabaseClient.auth.signIn({ email, password });
-        if (error) {
-            alert('Login failed: ' + error.message);
-        } else {
-            renderChatOptions();
+                <p>Don't have an account? <a href="register.html">Register</a></p>
+            `;
         }
-    }
 
-    async function register() {
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-        const { user, error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) {
-            alert('Registration failed: ' + error.message);
-        } else {
-            alert('Registration successful. You can now log in.');
-            renderLoginForm();
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabaseClient.auth.signIn({ email, password });
+            if (error) {
+                alert('Login failed: ' + error.message);
+            } else {
+                window.location.href = "chatroom.html";
+            }
         }
-    }
 
-    async function renderChatOptions() {
-        document.getElementById('root').innerHTML = `
-            <div class="container">
-                <h2>Chat Options</h2>
-                <button onclick="createChatRoom()">Create Chat Room</button>
-                <button onclick="joinChatRoom()">Join Chat Room</button>
-            </div>
-        `;
-    }
-
-    async function createChatRoom() {
-        const chatRoomName = prompt('Enter Chat Room Name');
-        const { data, error } = await supabaseClient.from('rooms').insert([{ name: chatRoomName }]);
-        if (error) {
-            alert('Error creating chat room: ' + error.message);
-        } else {
-            alert('Chat room created: ' + data[0].name);
-        }
-    }
-
-    async function joinChatRoom() {
-        const chatRoomName = prompt('Enter Chat Room Name');
-        const { data, error } = await supabaseClient.from('rooms').select('*').eq('name', chatRoomName);
-        if (error || data.length === 0) {
-            alert('Invalid chat room name');
-        } else {
-            alert('Joined chat room: ' + data[0].name);
-        }
-    }
-
-    renderLoginForm();
-</script>
-
+        renderLoginForm();
+    </script>
 </body>
 </html>
