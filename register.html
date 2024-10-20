@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
+</head>
+<body>
+    <div class="container" id="root"></div>
+
+    <script>
+        const { createClient } = supabase;
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_KEY';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        async function renderRegisterForm() {
+            document.getElementById('root').innerHTML = `
+                <h2>Register</h2>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <a href="index.html">Login</a></p>
+            `;
+        }
+
+        async function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                alert('Registration failed: ' + error.message);
+            } else {
+                alert('Registration successful. Please check your email to confirm.');
+                window.location.href = "index.html"; // Redirect to login after registration
+            }
+        }
+
+        renderRegisterForm();
+    </script>
+</body>
+</html>
