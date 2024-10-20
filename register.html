@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+        /* General styles for the registration page */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f7f3ff; /* Light lavender background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .register-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+            animation: zoomIn 0.6s ease-in-out;
+        }
+
+        .register-container h2 {
+            font-size: 26px;
+            margin-bottom: 25px;
+            color: #7d5fff; /* Vibrant purple for titles */
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease-in-out;
+            background: #f4f4f9;
+        }
+
+        input:focus {
+            border-color: #ff6f61; /* Modern coral accent */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #ff6f61; /* Modern coral */
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #f5564e;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Choose a Username" required>
+            <input type="password" id="secretKey" placeholder="Enter a Secret Key" required>
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have a secret key? <a href="login.html">Login now</a></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        // Get the Supabase client
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co'; // Replace with your Supabase URL
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase Key
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Handle registration form submission
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const username = document.getElementById('username').value;
+            const secretKey = document.getElementById('secretKey').value;
+
+            // Perform registration using Supabase
+            const { data, error } = await supabase
+                .from('users') // Replace with your users table name later
+                .insert([{ username, secret_key: secretKey }]); // Adjust this based on your schema
+
+            if (error) {
+                alert('Registration failed. Please try again.');
+            } else {
+                alert('Registration successful! Redirecting to profile...');
+                window.location.href = 'profile.html'; // Change to your profile file
+            }
+        });
+    </script>
+</body>
+</html>
