@@ -76,7 +76,7 @@
 <script>
     const { createClient } = supabase;
     const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your actual anon key
+    const supabaseKey = 'your_supabase_anon_key'; // Replace with your actual anon key
     const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
     async function renderLoginForm() {
@@ -106,10 +106,14 @@
     async function login() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { error } = await supabaseClient.auth.signIn({ email, password });
+        console.log('Attempting to log in with:', { email, password }); // Log input values
+        const { user, error } = await supabaseClient.auth.signIn({ email, password });
+        
         if (error) {
+            console.error('Login error:', error); // Log error details
             alert('Login failed: ' + error.message);
         } else {
+            console.log('Logged in user:', user); // Log successful login
             renderChatOptions();
         }
     }
@@ -192,11 +196,11 @@
 
     async function sendMessage(roomCode, messageContent) {
         if (!messageContent) return;
-        const { error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, content: messageContent, room_code: roomCode }]);
+        const { error } = await supabaseClient.from('messages').insert([{ room_code: roomCode, user_id: supabaseClient.auth.user().id, content: messageContent }]);
         if (error) {
             alert('Error sending message: ' + error.message);
         } else {
-            loadMessages(roomCode);
+            loadMessages(roomCode); // Reload messages after sending
         }
     }
 
