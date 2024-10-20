@@ -106,15 +106,16 @@
     async function login() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        console.log('Attempting to log in with:', { email, password }); // Log input values
+        console.log('Attempting to log in with:', { email, password });
+
         const { user, error } = await supabaseClient.auth.signIn({ email, password });
         
         if (error) {
-            console.error('Login error:', error); // Log error details
+            console.error('Login error:', error);
             alert('Login failed: ' + error.message);
         } else {
-            console.log('Logged in user:', user); // Log successful login
-            renderChatOptions();
+            console.log('Logged in user:', user);
+            renderChatOptions(); // Redirect to chat options after successful login
         }
     }
 
@@ -122,6 +123,7 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { user, error } = await supabaseClient.auth.signUp({ email, password });
+        
         if (error) {
             alert('Registration failed: ' + error.message);
         } else {
@@ -142,8 +144,9 @@
     async function createChatRoom() {
         const roomCode = prompt('Enter a unique chat room code:');
         const { error } = await supabaseClient.from('chat_rooms').insert([{ room_code: roomCode }]);
+        
         if (error) {
-            if (error.code === '23505') { // Unique violation error code
+            if (error.code === '23505') {
                 alert('Room code already exists. Please choose another code.');
             } else {
                 alert('Error creating chat room: ' + error.message);
@@ -179,6 +182,7 @@
 
     async function loadMessages(roomCode) {
         const { data, error } = await supabaseClient.from('messages').select('*').eq('room_code', roomCode);
+        
         if (error) {
             alert('Error loading messages: ' + error.message);
         } else {
@@ -197,6 +201,7 @@
     async function sendMessage(roomCode, messageContent) {
         if (!messageContent) return;
         const { error } = await supabaseClient.from('messages').insert([{ room_code: roomCode, user_id: supabaseClient.auth.user().id, content: messageContent }]);
+        
         if (error) {
             alert('Error sending message: ' + error.message);
         } else {
