@@ -1,97 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .login-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      width: 300px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-bottom: 10px;
-    }
-    button {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      cursor: pointer;
-      margin-top: 10px;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .register-link {
-      margin-top: 10px;
-      color: #007bff;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js" defer></script>
 </head>
 <body>
+    <div class="login-container">
+        <h2>Log in with Secret Key</h2>
+        <input type="text" id="secretKeyInput" placeholder="Enter your secret key" required>
+        <button onclick="login()">Login</button>
+        <p class="register-link" onclick="openRegistration()">Don't have any secret key? Register now</p>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
-  <div class="login-container">
-    <h2>Log in with Secret Key</h2>
-    <input type="text" id="secretKeyInput" placeholder="Enter your secret key">
-    <button onclick="login()">Login</button>
-    <p class="register-link" onclick="openRegistration()">Don't have any secret key? Register now</p>
-  </div>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG42YN-F5gkSUu_rLl9zFe9bWyHts01-4",
+            authDomain: "chat-hub-7b108.firebaseapp.com",
+            projectId: "chat-hub-7b108",
+            storageBucket: "chat-hub-7b108.appspot.com",
+            messagingSenderId: "214941914454",
+            appId: "1:214941914454:web:9840f1390831b82f3272f7"
+        };
 
-  <script type="module">
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    const db = getDatabase();
+        function login() {
+            const secretKey = document.getElementById('secretKeyInput').value.trim();
+            if (secretKey === '') {
+                alert('Please enter a secret key.');
+                return;
+            }
 
-    function login() {
-      const secretKey = document.getElementById('secretKeyInput').value.trim();
-      if (secretKey === '') {
-        alert('Please enter a secret key.');
-        return;
-      }
-
-      // Check if the user exists in the database
-      const dbRef = ref(db, 'users/' + secretKey);
-      get(dbRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          localStorage.setItem('secretKey', secretKey);
-          localStorage.setItem('username', snapshot.val().username);
-          window.location.href = 'homepage.html'; // Redirect to homepage
-        } else {
-          alert('Invalid secret key.');
+            // Check if the user exists in the database
+            const dbRef = ref(db, 'users/' + secretKey);
+            get(dbRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    localStorage.setItem('secretKey', secretKey);
+                    localStorage.setItem('username', snapshot.val().username);
+                    window.location.href = 'homepage.html'; // Redirect to homepage
+                } else {
+                    alert('Invalid secret key.');
+                }
+            }).catch((error) => {
+                console.error(error);
+            });
         }
-      }).catch((error) => {
-        console.error(error);
-      });
-    }
 
-    function openRegistration() {
-      window.location.href = 'registration.html'; // Redirect to registration page
-    }
-  </script>
-
+        function openRegistration() {
+            window.location.href = 'registration.html'; // Redirect to registration page
+        }
+    </script>
 </body>
 </html>
