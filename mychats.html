@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Chats</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chats-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .chat-item {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chat-item:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chats-container">
+    <h2>My Chats</h2>
+    <div id="chatList"></div>
+  </div>
+
+  <script type="module">
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const db = getDatabase();
+    const secretKey = localStorage.getItem('secretKey');
+
+    window.onload = function() {
+      const chatListContainer = document.getElementById('chatList');
+
+      // Fetch chats from the database
+      const dbRef = ref(db, 'users/' + secretKey + '/chats');
+      get(dbRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const chats = snapshot.val();
+          chatListContainer.innerHTML = ''; // Clear previous data
+          Object.keys(chats).forEach(chatId => {
+            const chatName = chats[chatId].name;
+            chatListContainer.innerHTML += `
+              <div class="chat-item" onclick="joinChat('${chatId}')">
+                ${chatName}
+              </div>
+            `;
+          });
+        } else {
+          chatListContainer.innerHTML = '<p>No chats available.</p>';
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+    };
+
+    function joinChat(chatId) {
+      localStorage.setItem('chatId', chatId); // Store the chat ID
+      window.location.href = 'chat.html'; // Redirect to the chat page
+    }
+  </script>
+
+</body>
+</html>
