@@ -1,86 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Chats</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .chats-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      width: 300px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    .chat-item {
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .chat-item:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chats</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js" defer></script>
 </head>
 <body>
+    <div class="mychats-container">
+        <h2>My Chats</h2>
+        <div id="chatsList"></div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
-  <div class="chats-container">
-    <h2>My Chats</h2>
-    <div id="chatList"></div>
-  </div>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG42YN-F5gkSUu_rLl9zFe9bWyHts01-4",
+            authDomain: "chat-hub-7b108.firebaseapp.com",
+            projectId: "chat-hub-7b108",
+            storageBucket: "chat-hub-7b108.appspot.com",
+            messagingSenderId: "214941914454",
+            appId: "1:214941914454:web:9840f1390831b82f3272f7"
+        };
 
-  <script type="module">
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    const db = getDatabase();
-    const secretKey = localStorage.getItem('secretKey');
+        const secretKey = localStorage.getItem('secretKey');
+        const chatsRef = ref(db, 'chats/' + secretKey);
 
-    window.onload = function() {
-      const chatListContainer = document.getElementById('chatList');
+        onValue(chatsRef, (snapshot) => {
+            const chatsList = document.getElementById('chatsList');
+            chatsList.innerHTML = ''; // Clear the list
 
-      // Fetch chats from the database
-      const dbRef = ref(db, 'users/' + secretKey + '/chats');
-      get(dbRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const chats = snapshot.val();
-          chatListContainer.innerHTML = ''; // Clear previous data
-          Object.keys(chats).forEach(chatId => {
-            const chatName = chats[chatId].name;
-            chatListContainer.innerHTML += `
-              <div class="chat-item" onclick="joinChat('${chatId}')">
-                ${chatName}
-              </div>
-            `;
-          });
-        } else {
-          chatListContainer.innerHTML = '<p>No chats available.</p>';
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
-    };
-
-    function joinChat(chatId) {
-      localStorage.setItem('chatId', chatId); // Store the chat ID
-      window.location.href = 'chat.html'; // Redirect to the chat page
-    }
-  </script>
-
+            snapshot.forEach((childSnapshot) => {
+                const chat = childSnapshot.val();
+                const chatDiv = document.createElement('div');
+                chatDiv.textContent = chat.message; // Adjust this to display the desired message
+                chatsList.appendChild(chatDiv);
+            });
+        });
+    </script>
 </body>
 </html>
