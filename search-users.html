@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users</title>
+    <style>
+        /* General styles for the Search Users page */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f7f3ff; /* Light lavender background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .search-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background: #fff; /* White background for search area */
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            width: calc(100% - 22px); /* Account for padding */
+        }
+
+        .user-item {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .user-item:hover {
+            background-color: #f0f0f0; /* Light grey on hover */
+        }
+
+        #resultsList {
+            flex: 1;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h2>Search Users</h2>
+        <input type="text" id="searchInput" placeholder="Enter username..." />
+        <div id="resultsList"></div>
+    </div>
+
+    <script>
+        // Get the Supabase client
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co'; // Replace with your Supabase URL
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase Key
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsList = document.getElementById('resultsList');
+
+        // Function to search for users by username
+        searchInput.addEventListener('input', async () => {
+            const query = searchInput.value.trim();
+
+            if (query) {
+                const { data, error } = await supabase
+                    .from('users') // Replace with your users table name
+                    .select('*')
+                    .ilike('username', `%${query}%`); // Case-insensitive search
+
+                if (data) {
+                    resultsList.innerHTML = ''; // Clear previous results
+                    data.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        userItem.textContent = user.username; // Display username
+                        userItem.onclick = () => {
+                            window.location.href = `profile.html?username=${user.username}`; // Redirect to user's profile
+                        };
+                        resultsList.appendChild(userItem);
+                    });
+                } else {
+                    resultsList.innerHTML = 'No users found.';
+                }
+            } else {
+                resultsList.innerHTML = ''; // Clear results if input is empty
+            }
+        });
+    </script>
+</body>
+</html>
