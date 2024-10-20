@@ -1,0 +1,44 @@
+/* General styles for the index page */
+.index-container {
+    margin: 0;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f7f3ff; /* Light lavender background */
+    font-family: 'Poppins', sans-serif;
+}
+
+.index-container h1 {
+    font-size: 36px;
+    color: #7d5fff; /* Vibrant purple for titles */
+    margin-bottom: 20px;
+}
+
+.index-container p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 40px;
+}
+
+.button-container {
+    display: flex;
+    gap: 20px; /* Space between buttons */
+}
+
+.button {
+    padding: 15px 30px;
+    border: none;
+    background-color: #6200ea; /* Vibrant blue */
+    color: white;
+    font-size: 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover {
+    background-color: #3700b3; /* Darker blue on hover */
+}
