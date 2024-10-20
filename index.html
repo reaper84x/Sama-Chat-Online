@@ -40,6 +40,33 @@
         button:hover {
             background: #0056b3;
         }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .chat-bubble {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            position: relative;
+            animation: float 1.5s ease-in-out infinite;
+        }
+        .chat-bubble.self {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+        }
+        .chat-bubble.other {
+            background-color: #f1f1f1;
+            align-self: flex-start;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
 </head>
@@ -84,7 +111,7 @@
         if (error) {
             alert('Login failed: ' + error.message);
         } else {
-            renderProfilePage();
+            renderChatOptions();
         }
     }
 
@@ -95,7 +122,7 @@
         if (error) {
             alert('Registration failed: ' + error.message);
         } else {
-            alert('Registration successful. Please check your email to confirm.');
+            alert('Registration successful.');
             renderLoginForm();
         }
     }
@@ -121,7 +148,7 @@
         const education = document.getElementById('education').value;
         
         const { error } = await supabaseClient.from('users').upsert({
-            id: user.id, // Ensure to set the user ID for the profile
+            id: user.id,
             name,
             location,
             sex,
@@ -140,27 +167,73 @@
             <div class="container">
                 <button onclick="createChatRoom()">Create Chat Room</button>
                 <button onclick="joinChatRoom()">Join Chat Room</button>
+                <div class="chat-container" id="chat-container"></div>
             </div>
         `;
     }
 
     async function createChatRoom() {
-        const { data, error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, message: 'Chat Room Created' }]);
+        const roomName = prompt('Enter a name for the chat room:');
+        const { data, error } = await supabaseClient.from('chat_rooms').insert([{ name: roomName }]);
         if (error) {
             alert('Error creating chat room: ' + error.message);
         } else {
             alert('Chat room created with code: ' + data[0].id);
+            renderChatRoom(data[0].id);
         }
     }
 
     async function joinChatRoom() {
         const chatRoomCode = prompt('Enter Chat Room Code');
-        const { data, error } = await supabaseClient.from('messages').select('*').eq('id', chatRoomCode);
+        const { data, error } = await supabaseClient.from('chat_rooms').select('*').eq('id', chatRoomCode);
         if (error || data.length === 0) {
             alert('Invalid chat room code');
         } else {
-            alert('Joined chat room: ' + chatRoomCode);
+            renderChatRoom(chatRoomCode);
         }
+    }
+
+    async function renderChatRoom(roomId) {
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <h2>Chat Room</h2>
+                <div class="chat-container" id="chat-container"></div>
+                <input type="text" id="message" placeholder="Type your message...">
+                <button onclick="sendMessage('${roomId}')">Send</button>
+            </div>
+        `;
+        loadMessages(roomId);
+    }
+
+    async function sendMessage(roomId) {
+        const message = document.getElementById('message').value;
+        const userId = supabaseClient.auth.user().id;
+        const { error } = await supabaseClient.from('messages').insert([{ room_id: roomId, user_id: userId, message }]);
+        if (error) {
+            alert('Error sending message: ' + error.message);
+        } else {
+            document.getElementById('message').value = '';
+            loadMessages(roomId);
+        }
+    }
+
+    async function loadMessages(roomId) {
+        const { data, error } = await supabaseClient.from('messages').select('*').eq('room_id', roomId);
+        if (error) {
+            console.error('Error loading messages:', error);
+            return;
+        }
+
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.innerHTML = '';
+        data.forEach(msg => {
+            const bubbleClass = msg.user_id === supabaseClient.auth.user().id ? 'self' : 'other';
+            const chatBubble = document.createElement('div');
+            chatBubble.classList.add('chat-bubble', bubbleClass);
+            chatBubble.textContent = msg.message
+chatContainer.appendChild(chatBubble);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
     }
 
     renderLoginForm();
