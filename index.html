@@ -65,7 +65,7 @@
     <div class="error-message" id="error-message"></div>
     <input type="email" id="email" placeholder="Email" required>
     <input type="password" id="password" placeholder="Password" required>
-    <button onclick="login()">Login</button>
+    <button id="login-button">Login</button>
     <div class="register-link">
         <p>Don't have an account? <a href="register.html">Register</a></p>
     </div>
@@ -74,8 +74,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
     // Initialize Supabase client after the library is loaded
-    const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+    const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co'; // Replace with your Supabase URL
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase public API key
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function login() {
@@ -100,6 +100,9 @@
             errorMessage.style.display = 'block';
         }
     }
+
+    // Add event listener to the button
+    document.getElementById('login-button').addEventListener('click', login);
 </script>
 
 </body>
