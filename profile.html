@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .profile-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      width: 100%;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-container">
+    <h2>Update Profile</h2>
+    <input type="text" id="username" placeholder="Username" disabled>
+    <input type="text" id="location" placeholder="Location">
+    <input type="text" id="gender" placeholder="Gender">
+    <input type="text" id="education" placeholder="Education">
+    <button onclick="saveProfile()">Save</button>
+  </div>
+
+  <script type="module">
+    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    
+    const secretKey = localStorage.getItem('secretKey'); // Store the secretKey after login
+    const db = getDatabase();
+
+    // Load the profile data
+    window.onload = function() {
+      const dbRef = ref(db, 'users/' + secretKey + '/profile');
+      get(dbRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const profile = snapshot.val();
+          document.getElementById('username').value = profile.username;
+          document.getElementById('location').value = profile.location;
+          document.getElementById('gender').value = profile.gender;
+          document.getElementById('education').value = profile.education;
+        } else {
+          alert("No profile found.");
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+    };
+
+    // Save profile changes
+    function saveProfile() {
+      const location = document.getElementById('location').value;
+      const gender = document.getElementById('gender').value;
+      const education = document.getElementById('education').value;
+
+      update(ref(db, 'users/' + secretKey + '/profile'), {
+        location: location,
+        gender: gender,
+        education: education
+      }).then(() => {
+        alert('Profile updated successfully!');
+        window.location.href = 'home.html'; // Redirect to homepage after saving
+      }).catch((error) => {
+        console.error("Error updating profile: ", error);
+      });
+    }
+  </script>
+
+</body>
+</html>
