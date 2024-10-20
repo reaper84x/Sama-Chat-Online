@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <style>
+        /* General styles for the profile page */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background: #f7f3ff; /* Light lavender background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .profile-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+            animation: zoomIn 0.6s ease-in-out;
+        }
+
+        .profile-container h2 {
+            font-size: 26px;
+            margin-bottom: 25px;
+            color: #7d5fff; /* Vibrant purple for titles */
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease-in-out;
+            background: #f4f4f9;
+        }
+
+        input:focus {
+            border-color: #ff6f61; /* Modern coral accent */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #ff6f61; /* Modern coral */
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #f5564e;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h2>User Profile</h2>
+        <form id="profileForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="secretKey" placeholder="Secret Key" required>
+            <button type="submit">Save Changes</button>
+        </form>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        // Get the Supabase client
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co'; // Replace with your Supabase URL
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your Supabase Key
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Load user data on page load
+        window.onload = async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                document.getElementById('username').value = user.username;
+                document.getElementById('secretKey').value = user.secret_key; // Ensure this field is editable only if needed
+            } else {
+                alert('User not found! Please login.');
+                window.location.href = 'login.html'; // Redirect to login if no user found
+            }
+        };
+
+        // Handle profile form submission
+        document.getElementById('profileForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const username = document.getElementById('username').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            // Perform update using Supabase
+            const { data, error } = await supabase
+                .from('users') // Replace with your users table name later
+                .update({ username, secret_key: secretKey }) // Adjust this based on your schema
+                .eq('id', user.id); // Ensure to use a unique identifier
+
+            if (error) {
+                alert('Failed to save changes. Please try again.');
+            } else {
+                alert('Profile updated successfully!');
+                // Optionally, update localStorage with new data
+                user.username = username;
+                user.secret_key = secretKey;
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user'); // Remove user data from local storage
+            window.location.href = 'login.html'; // Redirect to login page
+        }
+    </script>
+</body>
+</html>
