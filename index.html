@@ -85,16 +85,16 @@
             const { error, user } = await supabase.auth.signIn({ email, password });
 
             if (error) {
-                console.error('Login error:', error.message);
+                console.error('Login error:', error);
                 errorMessage.textContent = 'Login failed: ' + error.message;
                 errorMessage.style.display = 'block';
             } else if (user) {
-                console.log('Login successful');
+                console.log('Login successful:', user);
                 window.location.href = '/chatroom.html'; // Redirect to chatroom after successful login
             }
         } catch (err) {
             console.error('Unexpected error during login:', err);
-            errorMessage.textContent = 'An unexpected error occurred';
+            errorMessage.textContent = 'An unexpected error occurred: ' + err.message;
             errorMessage.style.display = 'block';
         }
     }
