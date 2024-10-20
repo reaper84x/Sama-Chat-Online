@@ -41,25 +41,27 @@
             background: #0056b3;
         }
         .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 70vh;
+            max-height: 300px;
             overflow-y: auto;
+            border: 1px solid #ccc;
             padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
         }
         .chat-bubble {
-            margin: 5px;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 15px;
+            margin: 5px 0;
+            max-width: 70%;
             position: relative;
-            animation: float 1.5s ease-in-out infinite;
+            animation: float 0.3s ease;
         }
-        .chat-bubble.self {
-            background-color: #dcf8c6;
+        .self {
+            background-color: #d1e7dd;
             align-self: flex-end;
         }
-        .chat-bubble.other {
-            background-color: #f1f1f1;
+        .other {
+            background-color: #f8d7da;
             align-self: flex-start;
         }
         @keyframes float {
@@ -122,7 +124,7 @@
         if (error) {
             alert('Registration failed: ' + error.message);
         } else {
-            alert('Registration successful.');
+            alert('Registration successful. Please check your email to confirm.');
             renderLoginForm();
         }
     }
@@ -148,7 +150,7 @@
         const education = document.getElementById('education').value;
         
         const { error } = await supabaseClient.from('users').upsert({
-            id: user.id,
+            id: user.id, // Ensure to set the user ID for the profile
             name,
             location,
             sex,
@@ -167,19 +169,17 @@
             <div class="container">
                 <button onclick="createChatRoom()">Create Chat Room</button>
                 <button onclick="joinChatRoom()">Join Chat Room</button>
-                <div class="chat-container" id="chat-container"></div>
             </div>
         `;
     }
 
     async function createChatRoom() {
-        const roomName = prompt('Enter a name for the chat room:');
-        const { data, error } = await supabaseClient.from('chat_rooms').insert([{ name: roomName }]);
+        const chatRoomName = prompt('Enter Chat Room Name');
+        const { data, error } = await supabaseClient.from('chat_rooms').insert([{ name: chatRoomName, user_id: supabaseClient.auth.user().id }]);
         if (error) {
             alert('Error creating chat room: ' + error.message);
         } else {
             alert('Chat room created with code: ' + data[0].id);
-            renderChatRoom(data[0].id);
         }
     }
 
@@ -189,51 +189,50 @@
         if (error || data.length === 0) {
             alert('Invalid chat room code');
         } else {
-            renderChatRoom(chatRoomCode);
+            renderChatRoom(data[0].id);
         }
     }
 
     async function renderChatRoom(roomId) {
+        const chatContainer = document.createElement('div');
+        chatContainer.classList.add('chat-container');
         document.getElementById('root').innerHTML = `
             <div class="container">
                 <h2>Chat Room</h2>
-                <div class="chat-container" id="chat-container"></div>
-                <input type="text" id="message" placeholder="Type your message...">
+                <div id="chatContainer" class="chat-container"></div>
+                <input type="text" id="messageInput" placeholder="Type a message...">
                 <button onclick="sendMessage('${roomId}')">Send</button>
             </div>
         `;
+        document.body.appendChild(chatContainer);
         loadMessages(roomId);
     }
 
-    async function sendMessage(roomId) {
-        const message = document.getElementById('message').value;
-        const userId = supabaseClient.auth.user().id;
-        const { error } = await supabaseClient.from('messages').insert([{ room_id: roomId, user_id: userId, message }]);
+    async function loadMessages(roomId) {
+        const { data, error } = await supabaseClient.from('messages').select('*').eq('chat_room_id', roomId);
         if (error) {
-            alert('Error sending message: ' + error.message);
+            alert('Error loading messages: ' + error.message);
         } else {
-            document.getElementById('message').value = '';
-            loadMessages(roomId);
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = ''; // Clear existing messages
+            data.forEach(message => {
+                const chatBubble = document.createElement('div');
+                chatBubble.classList.add('chat-bubble', message.user_id === supabaseClient.auth.user().id ? 'self' : 'other');
+                chatBubble.innerText = message.content;
+                chatContainer.appendChild(chatBubble);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
         }
     }
 
-    async function loadMessages(roomId) {
-        const { data, error } = await supabaseClient.from('messages').select('*').eq('room_id', roomId);
-        if (error) {
-            console.error('Error loading messages:', error);
-            return;
+    async function sendMessage(roomId) {
+        const messageContent = document.getElementById('messageInput').value;
+        const { error } = await supabaseClient.from('messages').insert([{ content: messageContent, user_id: supabaseClient.auth.user().id, chat_room_id: roomId }]);
+        if (error) {alert('Error sending message: ' + error.message);
+        } else {
+            document.getElementById('messageInput').value = ''; // Clear the input field
+            loadMessages(roomId); // Reload messages to show the new message
         }
-
-        const chatContainer = document.getElementById('chat-container');
-        chatContainer.innerHTML = '';
-        data.forEach(msg => {
-            const bubbleClass = msg.user_id === supabaseClient.auth.user().id ? 'self' : 'other';
-            const chatBubble = document.createElement('div');
-            chatBubble.classList.add('chat-bubble', bubbleClass);
-            chatBubble.textContent = msg.message
-chatContainer.appendChild(chatBubble);
-        });
-        chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
     }
 
     renderLoginForm();
