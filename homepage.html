@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <style>
+        /* General styles for the homepage */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #f7f3ff; /* Light lavender background */
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .home-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+            animation: zoomIn 0.6s ease-in-out;
+        }
+
+        .home-container h2 {
+            font-size: 26px;
+            margin-bottom: 25px;
+            color: #7d5fff; /* Vibrant purple for titles */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background-color: #ff6f61; /* Modern coral */
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #f5564e;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f4f4f9;
+        }
+
+        input:focus {
+            border-color: #ff6f61; /* Modern coral accent */
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <h2>Welcome!</h2>
+        <button onclick="goToProfile()">Profile</button>
+        <button onclick="searchUser()">Search User</button>
+        <button onclick="viewMyChats()">My Chats</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user'); // Remove user data from local storage
+            window.location.href = 'login.html'; // Redirect to login page
+        }
+
+        // Redirect to the profile page
+        function goToProfile() {
+            window.location.href = 'profile.html'; // Change to your profile file
+        }
+
+        // Function to search for users
+        function searchUser() {
+            const username = prompt("Enter the username to search:");
+            if (username) {
+                window.location.href = `user-profile.html?username=${username}`; // Redirect to user profile page
+            }
+        }
+
+        // Function to view chats
+        function viewMyChats() {
+            window.location.href = 'my-chats.html'; // Redirect to your chats page
+        }
+
+        // Load user data on page load
+        window.onload = () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                alert('User not found! Please login.');
+                window.location.href = 'login.html'; // Redirect to login if no user found
+            }
+        };
+    </script>
+</body>
+</html>
