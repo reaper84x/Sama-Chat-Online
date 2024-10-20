@@ -40,34 +40,31 @@
         button:hover {
             background: #0056b3;
         }
-        .chat-container {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
         .chat-bubble {
+            margin: 5px;
             padding: 10px;
             border-radius: 15px;
-            margin: 5px 0;
-            max-width: 70%;
             position: relative;
-            animation: float 0.3s ease;
+            animation: float 3s ease-in-out infinite;
         }
-        .self {
+        .my-message {
             background-color: #d1e7dd;
             align-self: flex-end;
         }
-        .other {
+        .other-message {
             background-color: #f8d7da;
             align-self: flex-start;
         }
         @keyframes float {
             0% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+            50% { transform: translateY(-10px); }
             100% { transform: translateY(0); }
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+            overflow-y: auto;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
@@ -79,15 +76,15 @@
 <script>
     const { createClient } = supabase;
     const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+    const supabaseKey = 'your_supabase_anon_key'; // Replace with your actual anon key
     const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
     async function renderLoginForm() {
         document.getElementById('root').innerHTML = `
             <div class="container">
                 <h2>Login</h2>
-                <input type="email" id="email" placeholder="Email">
-                <input type="password" id="password" placeholder="Password">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
                 <button onclick="login()">Login</button>
                 <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
             </div>
@@ -98,8 +95,8 @@
         document.getElementById('root').innerHTML = `
             <div class="container">
                 <h2>Register</h2>
-                <input type="email" id="email" placeholder="Email">
-                <input type="password" id="password" placeholder="Password">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
                 <button onclick="register()">Register</button>
                 <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
             </div>
@@ -124,43 +121,8 @@
         if (error) {
             alert('Registration failed: ' + error.message);
         } else {
-            alert('Registration successful. Please check your email to confirm.');
+            alert('Registration successful. You can now log in.');
             renderLoginForm();
-        }
-    }
-
-    async function renderProfilePage() {
-        document.getElementById('root').innerHTML = `
-            <div class="container">
-                <h2>Update Profile</h2>
-                <input type="text" id="name" placeholder="Name">
-                <input type="text" id="location" placeholder="Location">
-                <input type="text" id="sex" placeholder="Sex">
-                <input type="text" id="education" placeholder="Education">
-                <button onclick="saveProfile()">Save Profile</button>
-            </div>
-        `;
-    }
-
-    async function saveProfile() {
-        const user = supabaseClient.auth.user();
-        const name = document.getElementById('name').value;
-        const location = document.getElementById('location').value;
-        const sex = document.getElementById('sex').value;
-        const education = document.getElementById('education').value;
-        
-        const { error } = await supabaseClient.from('users').upsert({
-            id: user.id, // Ensure to set the user ID for the profile
-            name,
-            location,
-            sex,
-            education
-        });
-
-        if (error) {
-            alert('Profile update failed: ' + error.message);
-        } else {
-            renderChatOptions();
         }
     }
 
@@ -174,64 +136,67 @@
     }
 
     async function createChatRoom() {
-        const chatRoomName = prompt('Enter Chat Room Name');
-        const { data, error } = await supabaseClient.from('chat_rooms').insert([{ name: chatRoomName, user_id: supabaseClient.auth.user().id }]);
+        const roomCode = prompt('Enter a unique chat room code:');
+        const { error } = await supabaseClient.from('chat_rooms').insert([{ room_code: roomCode }]);
         if (error) {
-            alert('Error creating chat room: ' + error.message);
+            if (error.code === '23505') { // Unique violation error code
+                alert('Room code already exists. Please choose another code.');
+            } else {
+                alert('Error creating chat room: ' + error.message);
+            }
         } else {
-            alert('Chat room created with code: ' + data[0].id);
+            alert('Chat room created with code: ' + roomCode);
+            renderChatRoom(roomCode);
         }
     }
 
     async function joinChatRoom() {
         const chatRoomCode = prompt('Enter Chat Room Code');
-        const { data, error } = await supabaseClient.from('chat_rooms').select('*').eq('id', chatRoomCode);
-        if (error || data.length === 0) {
-            alert('Invalid chat room code');
-        } else {
-            renderChatRoom(data[0].id);
-        }
+        renderChatRoom(chatRoomCode);
     }
 
-    async function renderChatRoom(roomId) {
+    async function renderChatRoom(roomCode) {
         const chatContainer = document.createElement('div');
-        chatContainer.classList.add('chat-container');
-        document.getElementById('root').innerHTML = `
-            <div class="container">
-                <h2>Chat Room</h2>
-                <div id="chatContainer" class="chat-container"></div>
-                <input type="text" id="messageInput" placeholder="Type a message...">
-                <button onclick="sendMessage('${roomId}')">Send</button>
-            </div>
-        `;
-        document.body.appendChild(chatContainer);
-        loadMessages(roomId);
+        chatContainer.className = 'chat-container';
+        const inputContainer = document.createElement('div');
+        const messageInput = document.createElement('input');
+        messageInput.type = 'text';
+        messageInput.placeholder = 'Type your message...';
+        const sendButton = document.createElement('button');
+        sendButton.innerText = 'Send';
+        sendButton.onclick = () => sendMessage(roomCode, messageInput.value);
+        inputContainer.appendChild(messageInput);
+        inputContainer.appendChild(sendButton);
+        document.getElementById('root').innerHTML = '';
+        document.getElementById('root').appendChild(chatContainer);
+        document.getElementById('root').appendChild(inputContainer);
+        loadMessages(roomCode);
     }
 
-    async function loadMessages(roomId) {
-        const { data, error } = await supabaseClient.from('messages').select('*').eq('chat_room_id', roomId);
+    async function loadMessages(roomCode) {
+        const { data, error } = await supabaseClient.from('messages').select('*').eq('room_code', roomCode);
         if (error) {
             alert('Error loading messages: ' + error.message);
         } else {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.innerHTML = ''; // Clear existing messages
+            const chatContainer = document.querySelector('.chat-container');
+            chatContainer.innerHTML = '';
             data.forEach(message => {
-                const chatBubble = document.createElement('div');
-                chatBubble.classList.add('chat-bubble', message.user_id === supabaseClient.auth.user().id ? 'self' : 'other');
-                chatBubble.innerText = message.content;
-                chatContainer.appendChild(chatBubble);
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble ' + (message.user_id === supabaseClient.auth.user().id ? 'my-message' : 'other-message');
+                bubble.innerText = message.content;
+                chatContainer.appendChild(bubble);
             });
             chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
         }
     }
 
-    async function sendMessage(roomId) {
-        const messageContent = document.getElementById('messageInput').value;
-        const { error } = await supabaseClient.from('messages').insert([{ content: messageContent, user_id: supabaseClient.auth.user().id, chat_room_id: roomId }]);
-        if (error) {alert('Error sending message: ' + error.message);
+    async function sendMessage(roomCode, messageContent) {
+        if (!messageContent) return;
+        const { error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, content: messageContent, room_code: roomCode }]);
+        if (error) {
+            alert('Error sending message: ' + error.message);
         } else {
-            document.getElementById('messageInput').value = ''; // Clear the input field
-            loadMessages(roomId); // Reload messages to show the new message
+            loadMessages(roomCode);
         }
     }
 
