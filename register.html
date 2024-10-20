@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .register-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 300px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      width: 100%;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    a {
+      display: block;
+      margin-top: 10px;
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-container">
+    <h2>Register with Secret Key</h2>
+    <input type="text" id="secretKey" placeholder="Enter Secret Key" required>
+    <input type="text" id="username" placeholder="Enter Username" required>
+    <button onclick="register()">Register</button>
+  </div>
+
+  <script type="module">
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    // Function to handle registration with secret key and save profile
+    function register() {
+      const secretKey = document.getElementById('secretKey').value;
+      const username = document.getElementById('username').value;
+
+      if (!secretKey || !username) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      const db = getDatabase();
+      const dbRef = ref(db);
+
+      get(child(dbRef, `users/${secretKey}`)).then((snapshot) => {
+        if (snapshot.exists()) {
+          alert('Secret key already registered.');
+        } else {
+          // Save profile data
+          set(ref(db, 'users/' + secretKey + '/profile'), {
+            username: username,
+            location: '',
+            gender: '',
+            education: ''
+          }).then(() => {
+            alert('Registration successful!');
+            window.location.href = 'profile.html';
+          }).catch((error) => {
+            console.error("Error writing to the database: ", error);
+          });
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
