@@ -7,234 +7,164 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
         }
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             width: 300px;
-            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         input {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         button {
-            background-color: #007bff;
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
-            width: 100%;
         }
         button:hover {
-            background-color: #0056b3;
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
+            background: #0056b3;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script>
-        const { createClient } = supabase;
-        const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM'; // Replace with your actual key
-        const supabaseClient = createClient(supabaseUrl, supabaseKey);
-
-        async function renderLoginForm() {
-            document.getElementById('root').innerHTML = `
-                <div class="container">
-                    <h2>Login</h2>
-                    <input type="email" id="email" placeholder="Email">
-                    <input type="password" id="password" placeholder="Password">
-                    <button onclick="login()">Login</button>
-                    <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
-                </div>
-            `;
-        }
-
-        async function renderRegisterForm() {
-            document.getElementById('root').innerHTML = `
-                <div class="container">
-                    <h2>Register</h2>
-                    <input type="email" id="email" placeholder="Email">
-                    <input type="password" id="password" placeholder="Password">
-                    <button onclick="register()">Register</button>
-                    <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
-                </div>
-            `;
-        }
-
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await supabaseClient.auth.signIn({ email, password });
-            if (error) {
-                alert('Login failed: ' + error.message);
-            } else {
-                alert('Login successful!');
-                renderProfilePage();
-            }
-        }
-
-        async function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) {
-                alert('Registration failed: ' + error.message);
-            } else {
-                alert('Registration successful! Please check your email for confirmation.');
-                renderLoginForm();
-            }
-        }
-
-        async function renderProfilePage() {
-            const user = supabaseClient.auth.user();
-            const { data: profile, error } = await supabaseClient
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (error) {
-                alert('Error fetching profile: ' + error.message);
-                return;
-            }
-
-            document.getElementById('root').innerHTML = `
-                <div class="container">
-                    <h2>Profile Page</h2>
-                    <p>Welcome, ${user.email}!</p>
-                    <input type="text" id="name" placeholder="Name" value="${profile.name || ''}">
-                    <input type="text" id="location" placeholder="Location" value="${profile.location || ''}">
-                    <input type="text" id="sex" placeholder="Sex" value="${profile.sex || ''}">
-                    <input type="text" id="education" placeholder="Education" value="${profile.education || ''}">
-                    <button onclick="saveProfile()">Save Profile</button>
-                    <button onclick="renderChatOptions()">Go to Chat</button>
-                    <button onclick="logout()">Logout</button>
-                </div>
-            `;
-        }
-
-        async function saveProfile() {
-            const user = supabaseClient.auth.user();
-            const name = document.getElementById('name').value;
-            const location = document.getElementById('location').value;
-            const sex = document.getElementById('sex').value;
-            const education = document.getElementById('education').value;
-
-            const { error } = await supabaseClient.from('users').upsert({
-                id: user.id,
-                name,
-                location,
-                sex,
-                education
-            });
-
-            if (error) {
-                alert('Profile update failed: ' + error.message);
-            } else {
-                alert('Profile updated successfully!');
-                renderProfilePage();
-            }
-        }
-
-        async function renderChatOptions() {
-            document.getElementById('root').innerHTML = `
-                <div class="container">
-                    <h2>Chat Options</h2>
-                    <button onclick="createChatRoom()">Create Chat Room</button>
-                    <button onclick="joinChatRoom()">Join Chat Room</button>
-                </div>
-            `;
-        }
-
-        async function createChatRoom() {
-            const { data, error } = await supabaseClient.from('rooms').insert([{ user_id: supabaseClient.auth.user().id, created_at: new Date() }]);
-            if (error) {
-                alert('Error creating chat room: ' + error.message);
-            } else {
-                alert('Chat room created with ID: ' + data[0].id);
-            }
-        }
-
-        async function joinChatRoom() {
-            const chatRoomCode = prompt('Enter Chat Room ID');
-            const { data, error } = await supabaseClient.from('rooms').select('*').eq('id', chatRoomCode);
-            if (error || data.length === 0) {
-                alert('Invalid chat room ID');
-            } else {
-                alert('Joined chat room: ' + chatRoomCode);
-                renderChatRoom(chatRoomCode);
-            }
-        }
-
-        async function renderChatRoom(roomId) {
-            document.getElementById('root').innerHTML = `
-                <div class="container">
-                    <h2>Chat Room: ${roomId}</h2>
-                    <div id="messages"></div>
-                    <input type="text" id="message" placeholder="Type a message...">
-                    <button onclick="sendMessage('${roomId}')">Send</button>
-                    <button onclick="renderChatOptions()">Back</button>
-                </div>
-            `;
-            fetchMessages(roomId);
-        }
-
-        async function sendMessage(roomId) {
-            const message = document.getElementById('message').value;
-            const { error } = await supabaseClient.from('messages').insert([{ room_id: roomId, user_id: supabaseClient.auth.user().id, content: message, created_at: new Date() }]);
-            if (error) {
-                alert('Error sending message: ' + error.message);
-            } else {
-                document.getElementById('message').value = ''; // Clear the input
-                fetchMessages(roomId); // Refresh messages
-            }
-        }
-
-        async function fetchMessages(roomId) {
-            const { data, error } = await supabaseClient.from('messages').select('*').eq('room_id', roomId);
-            if (error) {
-                alert('Error fetching messages: ' + error.message);
-                return;
-            }
-
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = ''; // Clear previous messages
-
-            data.forEach(msg => {
-                messagesDiv.innerHTML += `<p><strong>${msg.user_id}:</strong> ${msg.content}</p>`;
-            });
-        }
-
-        async function logout() {
-            const { error } = await supabaseClient.auth.signOut();
-            if (error) {
-                alert('Logout failed: ' + error.message);
-            } else {
-                renderLoginForm();
-            }
-        }
-
-        renderLoginForm();
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
 </head>
 <body>
-    <div id="root"></div>
+
+<div id="root"></div>
+
+<script>
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    async function renderLoginForm() {
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <h2>Login</h2>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
+                <button onclick="login()">Login</button>
+                <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
+            </div>
+        `;
+    }
+
+    async function renderRegisterForm() {
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <h2>Register</h2>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
+            </div>
+        `;
+    }
+
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { error } = await supabaseClient.auth.signIn({ email, password });
+        if (error) {
+            alert('Login failed: ' + error.message);
+        } else {
+            renderProfilePage();
+        }
+    }
+
+    async function register() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { user, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            alert('Registration failed: ' + error.message);
+        } else {
+            alert('Registration successful. Please check your email to confirm.');
+            renderLoginForm();
+        }
+    }
+
+    async function renderProfilePage() {
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <h2>Update Profile</h2>
+                <input type="text" id="name" placeholder="Name">
+                <input type="text" id="location" placeholder="Location">
+                <input type="text" id="sex" placeholder="Sex">
+                <input type="text" id="education" placeholder="Education">
+                <button onclick="saveProfile()">Save Profile</button>
+            </div>
+        `;
+    }
+
+    async function saveProfile() {
+        const user = supabaseClient.auth.user();
+        const name = document.getElementById('name').value;
+        const location = document.getElementById('location').value;
+        const sex = document.getElementById('sex').value;
+        const education = document.getElementById('education').value;
+        
+        const { error } = await supabaseClient.from('users').upsert({
+            id: user.id, // Ensure to set the user ID for the profile
+            name,
+            location,
+            sex,
+            education
+        });
+
+        if (error) {
+            alert('Profile update failed: ' + error.message);
+        } else {
+            renderChatOptions();
+        }
+    }
+
+    async function renderChatOptions() {
+        document.getElementById('root').innerHTML = `
+            <div class="container">
+                <button onclick="createChatRoom()">Create Chat Room</button>
+                <button onclick="joinChatRoom()">Join Chat Room</button>
+            </div>
+        `;
+    }
+
+    async function createChatRoom() {
+        const { data, error } = await supabaseClient.from('messages').insert([{ user_id: supabaseClient.auth.user().id, message: 'Chat Room Created' }]);
+        if (error) {
+            alert('Error creating chat room: ' + error.message);
+        } else {
+            alert('Chat room created with code: ' + data[0].id);
+        }
+    }
+
+    async function joinChatRoom() {
+        const chatRoomCode = prompt('Enter Chat Room Code');
+        const { data, error } = await supabaseClient.from('messages').select('*').eq('id', chatRoomCode);
+        if (error || data.length === 0) {
+            alert('Invalid chat room code');
+        } else {
+            alert('Joined chat room: ' + chatRoomCode);
+        }
+    }
+
+    renderLoginForm();
+</script>
+
 </body>
 </html>
