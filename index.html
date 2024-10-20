@@ -5,28 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Application</title>
     <style>
-        /* Simple styling to center content */
+        /* Embedded CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
         .container {
-            width: 100%;
-            max-width: 400px;
-            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
             text-align: center;
         }
         input {
-            display: block;
             width: 100%;
-            margin: 10px 0;
             padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         button {
-            padding: 10px 20px;
-            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+
+    <!-- HTML Structure -->
     <div id="root"></div>
 
-    <script src="script.js"></script>  <!-- Make sure the file path is correct -->
+    <script>
+        // JavaScript Code (Supabase configuration and functions)
+        document.addEventListener("DOMContentLoaded", function() {
+            const supabaseUrl = 'https://szagifqmwaedmyixkyby.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6YWdpZnFtd2FlZG15aXhreWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjg5MzIsImV4cCI6MjA0NDk0NDkzMn0.eYdFojROC5K5SDks2gzLQrsYez8CbeuFXgqOlGT2pnM';
+            const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+            // Render login form
+            function renderLoginForm() {
+                document.getElementById('root').innerHTML = `
+                    <div class="container">
+                        <h2>Login</h2>
+                        <input type="email" id="email" placeholder="Email">
+                        <input type="password" id="password" placeholder="Password">
+                        <button onclick="login()">Login</button>
+                        <p>Don't have an account? <a href="#" onclick="renderRegisterForm()">Register</a></p>
+                    </div>
+                `;
+            }
+
+            // Login function
+            async function login() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const { error } = await supabaseClient.auth.signIn({ email, password });
+                if (error) {
+                    alert('Login failed');
+                } else {
+                    alert('Logged in successfully');
+                    // Proceed to next steps
+                }
+            }
+
+            // Render registration form
+            function renderRegisterForm() {
+                document.getElementById('root').innerHTML = `
+                    <div class="container">
+                        <h2>Register</h2>
+                        <input type="email" id="email" placeholder="Email">
+                        <input type="password" id="password" placeholder="Password">
+                        <button onclick="register()">Register</button>
+                        <p>Already have an account? <a href="#" onclick="renderLoginForm()">Login</a></p>
+                    </div>
+                `;
+            }
+
+            // Register function
+            async function register() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const { error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    alert('Registration failed');
+                } else {
+                    alert('Registration successful');
+                    // Proceed to next steps
+                }
+            }
+
+            // Initialize by rendering the login form
+            renderLoginForm();
+        });
+    </script>
+
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
 </body>
 </html>
