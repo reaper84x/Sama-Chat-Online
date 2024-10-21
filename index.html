@@ -6,19 +6,18 @@
     <title>Login</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
         }
-        .login-container {
+        .container {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         input {
             width: 100%;
@@ -28,51 +27,46 @@
             border-radius: 5px;
         }
         button {
-            width: 100%;
             padding: 10px;
             background-color: #3498db;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            width: 100%;
         }
         button:hover {
             background-color: #2980b9;
         }
-        a {
-            text-decoration: none;
-            color: #3498db;
-            display: block;
-            text-align: center;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="container">
         <h2>Log in with Secret Key</h2>
-        <input type="text" id="secretKey" placeholder="Enter your secret key" />
+        <input type="text" id="secretKey" placeholder="Enter your secret key" required />
         <button onclick="login()">Log In</button>
-        <a href="register.html">Don't have a secret key? Register now</a>
+        <p>Don't have a secret key? <a href="register.html">Register now</a></p>
     </div>
 
     <script>
         async function login() {
             const secretKey = document.getElementById('secretKey').value;
+
             const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
                 headers: {
                     'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
                 }
             });
+
             const data = await response.json();
             const users = data.record.users || [];
 
             const user = users.find(user => user.secretKey === secretKey);
             if (user) {
                 localStorage.setItem('username', user.username);
-                window.location.href = 'homepage.html';
+                window.location.href = 'homepage.html'; 
             } else {
-                alert('Invalid secret key');
+                alert("Invalid secret key!");
             }
         }
     </script>
