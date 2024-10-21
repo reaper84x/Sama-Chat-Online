@@ -4,65 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homepage</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
-        }
-        button {
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 0;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h2>Welcome, <span id="welcomeUser"></span></h2>
+        <h1>Welcome to the Chat App</h1>
         <button onclick="goToProfile()">Profile</button>
-        <button onclick="logOut()">Log Out</button>
-        <button onclick="searchUsers()">Search Users</button>
+        <button onclick="goToSearch()">Search Users</button>
         <button onclick="goToMyChats()">My Chats</button>
+        <button onclick="logout()">Log Out</button>
     </div>
 
     <script>
-        document.getElementById('welcomeUser').innerText = localStorage.getItem('username');
-
-        function logOut() {
-            localStorage.removeItem('username');
-            window.location.href = 'index.html'; 
+        // Check if user is logged in
+        if (!localStorage.getItem('secretKey')) {
+            alert('You must log in first!');
+            window.location.href = 'index.html'; // Redirect to login page
         }
 
         function goToProfile() {
-            window.location.href = 'profile.html'; 
+            window.location.href = 'profile.html'; // Redirect to profile page
         }
 
-        function searchUsers() {
-            window.location.href = 'search.html'; 
+        function goToSearch() {
+            window.location.href = 'search.html'; // Redirect to search users page
         }
 
         function goToMyChats() {
-            window.location.href = 'mychats.html'; 
+            window.location.href = 'mychats.html'; // Redirect to my chats page
+        }
+
+        function logout() {
+            localStorage.removeItem('secretKey'); // Remove the secret key
+            localStorage.removeItem('username'); // Remove the username
+            window.location.href = 'index.html'; // Redirect to login page
         }
     </script>
 </body>
