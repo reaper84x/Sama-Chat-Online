@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>My Chats</h1>
-        <ul id="chatList"></ul>
+        <div id="chatList" class="messages"></div>
         <button onclick="goToHomepage()">Back to Homepage</button>
     </div>
 
@@ -20,7 +20,7 @@
             window.location.href = 'index.html'; // Redirect to login page
         }
 
-        async function fetchChats() {
+        async function fetchMyChats() {
             const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
                 headers: {
                     'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
@@ -30,18 +30,22 @@
             const data = await response.json();
             const chats = data.record.chats || [];
 
-            // Display the chats in the list
-            const chatList = document.getElementById('chatList');
-            chats.forEach(chat => {
-                const listItem = document.createElement('li');
-                listItem.textContent = chat.with;
-                listItem.onclick = () => goToChat(chat.with); // Click to go to chat
-                chatList.appendChild(listItem);
-            });
+            displayChats(chats);
         }
 
-        function goToChat(username) {
-            window.location.href = `chat.html?user=${encodeURIComponent(username)}`; // Redirect to chat page
+        function displayChats(chats) {
+            const chatListContainer = document.getElementById('chatList');
+            chatListContainer.innerHTML = ''; // Clear previous chats
+
+            chats.forEach(chat => {
+                const chatDiv = document.createElement('div');
+                chatDiv.className = 'chat-item';
+                chatDiv.textContent = `Chat with ${chat.with}`;
+                chatDiv.onclick = () => {
+                    window.location.href = `chat.html?user=${chat.with}`; // Redirect to chat page
+                };
+                chatListContainer.appendChild(chatDiv);
+            });
         }
 
         function goToHomepage() {
@@ -49,7 +53,7 @@
         }
 
         // Fetch chats on page load
-        fetchChats();
+        fetchMyChats();
     </script>
 </body>
 </html>
