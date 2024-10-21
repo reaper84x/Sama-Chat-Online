@@ -7,107 +7,86 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(120deg, #3498db, #8e44ad);
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
         }
-
-        .register-box {
+        #registerBox {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            width: 300px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        .register-box h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .input-box {
-            width: 100%;
+        input {
             padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
+            margin: 10px 0;
             border-radius: 5px;
-            outline: none;
+            border: 1px solid #ddd;
+            width: 100%;
         }
-
-        .register-btn {
-            background: #3498db;
-            color: white;
+        button {
             padding: 10px;
+            background-color: #3498db;
+            color: white;
             border: none;
             border-radius: 5px;
-            width: 100%;
             cursor: pointer;
-            transition: background 0.3s ease;
+            width: 100%;
         }
-
-        .register-btn:hover {
-            background: #2980b9;
+        button:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 <body>
-
-    <div class="register-box">
+    <div id="registerBox">
         <h2>Register</h2>
-        <input type="text" class="input-box" id="usernameInput" placeholder="Choose a Username">
-        <input type="password" class="input-box" id="secretKeyInput" placeholder="Choose a Secret Key">
-        <button class="register-btn" onclick="register()">Register</button>
+        <input type="text" id="secretKey" placeholder="Enter your secret key" />
+        <input type="text" id="username" placeholder="Choose a username" />
+        <button onclick="register()">Register</button>
+        <p>Already have a secret key? <a href="index.html">Login now</a></p>
     </div>
 
     <script>
-        const binId = "6715f722ad19ca34f8bbffde";  // Your Bin ID
-        const apiKey = "$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi";  // Your API Key
-
         async function register() {
-            const username = document.getElementById('usernameInput').value;
-            const secretKey = document.getElementById('secretKeyInput').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const username = document.getElementById('username').value;
 
-            if (!username || !secretKey) {
-                alert('Please fill all fields');
-                return;
-            }
+            if (secretKey && username) {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde`, {
+                    headers: {
+                        'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
+                    }
+                });
+                const data = await response.json();
+                const users = data.record.users || [];
 
-            // Fetch existing users from JSONBin
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: {
-                    'X-Master-Key': apiKey
+                // Check if username already exists
+                if (users.some(user => user.username === username)) {
+                    alert('Username already exists. Please choose a different one.');
+                    return;
                 }
-            });
-            const data = await response.json();
-            const users = data.record.users;
 
-            // Check if username already exists
-            if (users.some(u => u.username === username)) {
-                alert('Username already exists');
-                return;
+                // Add new user
+                users.push({ username: username, secretKey: secretKey });
+                
+                await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
+                    },
+                    body: JSON.stringify({ users })
+                });
+
+                alert('Registration successful!');
+                window.location.href = 'index.html';
+            } else {
+                alert('Please fill in all fields');
             }
-
-            // Add the new user to the bin
-            users.push({ username, secretKey });
-
-            // Update JSONBin with the new user
-            await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': apiKey
-                },
-                body: JSON.stringify({ users })
-            });
-
-            // Redirect to profile page
-            localStorage.setItem('auth', 'true');
-            localStorage.setItem('username', username);
-            window.location.href = 'profile.html';
         }
     </script>
 </body>
