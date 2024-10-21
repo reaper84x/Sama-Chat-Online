@@ -5,47 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Users</title>
     <style>
-        /* Your existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .user {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <div id="searchBox">
-        <h2>Search Users</h2>
-        <input type="text" id="username" placeholder="Enter username to search" />
-        <button onclick="searchUser()">Search</button>
-        <div id="userProfile" style="margin-top: 20px;"></div>
-    </div>
+    <h1>Search Users</h1>
+    <input type="text" id="searchInput" placeholder="Search by username" oninput="searchUsers()" />
+    <div id="results"></div>
+    <button onclick="window.location.href='homepage.html'">Back</button>
 
     <script>
-        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
-        const binId = '6715f722ad19ca34f8bbffde';
-
-        async function searchUser() {
-            const username = document.getElementById('username').value;
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        async function searchUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
                 headers: {
-                    'X-Master-Key': apiKey
+                    'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
                 }
             });
             const data = await response.json();
             const users = data.record.users || [];
-            const user = users.find(u => u.username === username);
+            const resultsDiv = document.getElementById('results');
 
-            if (user) {
-                document.getElementById('userProfile').innerHTML = `
-                    <h3>${user.username}'s Profile</h3>
-                    <p>Location: ${user.location || 'N/A'}</p>
-                    <p>Education: ${user.education || 'N/A'}</p>
-                    <button onclick="startChat('${user.username}')">Chat</button>
-                `;
-            } else {
-                document.getElementById('userProfile').innerHTML = '<p>User not found.</p>';
-            }
-        }
+            // Clear previous results
+            resultsDiv.innerHTML = '';
 
-        function startChat(username) {
-            localStorage.setItem('chatWith', username);
-            window.location.href = 'chat.html';
+            // Filter users based on query
+            users.forEach(user => {
+                if (user.username.toLowerCase().includes(query)) {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'user';
+                    userDiv.textContent = user.username;
+                    resultsDiv.appendChild(userDiv);
+                }
+            });
         }
     </script>
 </body>
