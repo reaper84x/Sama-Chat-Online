@@ -5,7 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <style>
-        /* Your existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #profileBox {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: calc(100% - 22px);
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            transition: border 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +87,6 @@
             const data = await response.json();
             const users = data.record.users || [];
 
-            // Check if username is already taken
             const existingUser = users.find(u => u.username === newUsername && u.username !== currentUsername);
 
             if (existingUser) {
@@ -61,7 +94,6 @@
                 return;
             }
 
-            // Update user information
             const userIndex = users.findIndex(u => u.username === currentUsername);
             if (userIndex !== -1) {
                 users[userIndex] = { username: newUsername, location, education, secretKey: users[userIndex].secretKey };
@@ -75,7 +107,7 @@
                 });
 
                 alert('Profile updated successfully!');
-                localStorage.setItem('username', newUsername); // Update username in localStorage
+                localStorage.setItem('username', newUsername);
                 window.location.href = 'homepage.html';
             }
         }
