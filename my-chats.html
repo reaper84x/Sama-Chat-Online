@@ -7,73 +7,86 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             background-color: #f4f4f4;
+            overflow: hidden;
+        }
+        .container {
+            flex: 1;
             padding: 20px;
+            overflow-y: auto;
         }
-        #chatList {
-            list-style-type: none;
-            padding: 0;
-        }
-        .chatItem {
+        .chat-item {
+            padding: 10px;
             background: white;
-            padding: 15px;
-            margin: 5px 0;
-            border-radius: 8px;
+            margin: 10px 0;
+            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        .chatItem:hover {
-            background-color: #e9ecef;
+        .chat-item:hover {
+            background: #eaeaea;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 <body>
-    <h2>My Chats</h2>
-    <ul id="chatList"></ul>
+    <div class="container" id="chatListContainer">
+        <h2>My Chats</h2>
+        <!-- Chat items will be appended here -->
+    </div>
+    <button onclick="goToHomepage()">Back to Homepage</button>
 
     <script>
-        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
-        const binId = '6715f722ad19ca34f8bbffde';
-        const username = localStorage.getItem('username');
+        const chatListContainer = document.getElementById('chatListContainer');
+        const currentUsername = localStorage.getItem('username');
 
-        // Check if user is logged in
-        if (!username) {
-            window.location.href = 'index.html';
-        }
-
-        async function loadChats() {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        async function loadMyChats() {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
                 headers: {
-                    'X-Master-Key': apiKey
+                    'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
                 }
             });
+
             const data = await response.json();
-            const messages = data.record.messages || [];
+            const chats = data.record.chats || [];
 
-            const chatMap = {};
-            messages.forEach(msg => {
-                const chatPartner = msg.sender === username ? msg.receiver : msg.sender;
-                if (!chatMap[chatPartner]) {
-                    chatMap[chatPartner] = [];
-                }
-                chatMap[chatPartner].push(msg);
-            });
+            const userChats = chats.filter(chat => chat.sender === currentUsername || chat.receiver === currentUsername);
 
-            const chatList = document.getElementById('chatList');
-            chatList.innerHTML = '';
-            Object.keys(chatMap).forEach(partner => {
-                const chatItem = document.createElement('li');
-                chatItem.className = 'chatItem';
-                chatItem.innerText = `Chat with ${partner}`;
-                chatItem.onclick = () => {
-                    localStorage.setItem('chatWith', partner);
-                    window.location.href = 'chat.html';
-                };
-                chatList.appendChild(chatItem);
+            userChats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.innerText = chat.sender === currentUsername ? chat.receiver : chat.sender;
+                chatItem.onclick = () => startChat(chat.sender === currentUsername ? chat.receiver : chat.sender);
+                chatListContainer.appendChild(chatItem);
             });
         }
 
-        window.onload = loadChats;
+        function startChat(username) {
+            localStorage.setItem('chatWith', username);
+            window.location.href = 'chat.html';
+        }
+
+        function goToHomepage() {
+            window.location.href = 'homepage.html';
+        }
+
+        // Load chats when the page loads
+        loadMyChats();
     </script>
 </body>
 </html>
