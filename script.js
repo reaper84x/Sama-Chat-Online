@@ -47,14 +47,14 @@ const toggleSettings = () => {
 
 const hostChat = () => {
     currentRoomCode = generateRoomCode();
-    chatHistory[currentRoomCode] = [];
+    chatHistory[currentRoomCode] = []; // Create a new chat room in the chatHistory
     alert(`Chat room created! Room code: ${currentRoomCode}`);
     saveChatHistory(); // Save new room to JSONBin
     enterChatRoom();
 };
 
 const joinChat = () => {
-    document.getElementById('join-container').classList.remove('hidden');
+    document.getElementById('join-container').style.display = 'block'; // Show join options
 };
 
 const joinRoom = () => {
@@ -68,8 +68,8 @@ const joinRoom = () => {
 };
 
 const enterChatRoom = () => {
-    document.getElementById('chat-container').classList.remove('hidden');
-    document.getElementById('join-container').classList.add('hidden');
+    document.getElementById('chat-container').style.display = 'flex'; // Show chat container
+    document.getElementById('join-container').style.display = 'none'; // Hide join options
     displayMessages();
 };
 
@@ -81,7 +81,7 @@ const sendMessage = () => {
     const messageInput = document.getElementById('message-input');
     const messageText = messageInput.value.trim();
     if (messageText) {
-        const message = { text: messageText, sender: username, avatar: avatarUrl };
+        const message = { text: messageText, sender: username || 'Anonymous', avatar: avatarUrl || '' };
         chatHistory[currentRoomCode].push(message);
         messageInput.value = "";
         displayMessages();
@@ -94,9 +94,9 @@ const displayMessages = () => {
     messagesContainer.innerHTML = "";
     chatHistory[currentRoomCode].forEach((msg) => {
         const msgBubble = document.createElement('div');
-        msgBubble.className = msg.sender === username ? 'message sender' : 'message recipient';
+        msgBubble.className = 'message ' + (msg.sender === username ? 'sender' : 'recipient');
         msgBubble.innerHTML = `
-            <img src="${msg.avatar}" alt="avatar" class="avatar">
+            <img src="${msg.avatar}" alt="avatar" class="avatar" style="width:30px; height:30px; border-radius:50%;">
             <strong>${msg.sender}</strong>: ${msg.text}
         `;
         messagesContainer.appendChild(msgBubble);
