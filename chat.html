@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #chatBox {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .chatBubble {
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+            max-width: 70%;
+        }
+        .sent {
+            background-color: #3498db;
+            color: white;
+            margin-left: auto;
+        }
+        .received {
+            background-color: #e5e5e5;
+            color: black;
+            margin-right: auto;
+        }
+        input {
+            padding: 10px;
+            width: calc(100% - 22px);
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
+        const binId = '6715f722ad19ca34f8bbffde';
+        const chatBox = document.getElementById('chatBox');
+        const username = localStorage.getItem('username');
+        const chatWith = localStorage.getItem('chatWith');
+
+        // Load chat messages
+        async function loadChat() {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: {
+                    'X-Master-Key': apiKey
+                }
+            });
+            const data = await response.json();
+            const messages = data.record.messages || [];
+
+            messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = 'chatBubble ' + (msg.sender === username ? 'sent' : 'received');
+                bubble.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+                chatBox.appendChild(bubble);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+        }
+
+        // Send message
+        async function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+            if (!message) return;
+
+            const newMessage = { sender: username, text: message };
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': apiKey
+                },
+                body: JSON.stringify({ messages: [...(await getMessages()), newMessage] })
+            });
+
+            document.getElementById('messageInput').value = ''; // Clear input
+            loadChat(); // Reload chat messages
+        }
+
+        // Fetch existing messages
+        async function getMessages() {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: {
+                    'X-Master-Key': apiKey
+                }
+            });
+            const data = await response.json();
+            return data.record.messages || [];
+        }
+
+        // Load chat messages when the page loads
+        window.onload = loadChat;
+    </script>
+</body>
+</html>
