@@ -5,37 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <style>
-        /* Your existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #loginBox {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            width: calc(100% - 22px);
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            transition: border 0.3s;
+        }
+        input:focus {
+            border-color: #3498db;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        p {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div id="loginBox">
         <h2>Log In with Secret Key</h2>
-        <input type="text" id="secretKey" placeholder="Enter secret key" />
-        <button onclick="login()">Log In</button>
+        <input type="text" id="secretKey" placeholder="Enter your secret key" />
+        <button onclick="login()">Login</button>
         <p>Don't have a secret key? <a href="register.html">Register now</a></p>
     </div>
 
     <script>
-        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
         const binId = '6715f722ad19ca34f8bbffde';
+        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
 
         async function login() {
             const secretKey = document.getElementById('secretKey').value;
+
             const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: {
                     'X-Master-Key': apiKey
                 }
             });
-
             const data = await response.json();
             const users = data.record.users || [];
             const user = users.find(u => u.secretKey === secretKey);
 
             if (user) {
-                localStorage.setItem('auth', true);
                 localStorage.setItem('username', user.username);
-                localStorage.setItem('secretKey', secretKey);
                 window.location.href = 'homepage.html';
             } else {
                 alert('Invalid secret key. Please try again.');
