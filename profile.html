@@ -14,7 +14,7 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         input {
             padding: 10px;
@@ -34,7 +34,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
             transition: background 0.3s;
         }
         button:hover {
@@ -44,19 +43,25 @@
 </head>
 <body>
     <div id="profileBox">
-        <h2>Your Profile</h2>
-        <input type="text" id="username" placeholder="Username" required />
-        <input type="text" id="location" placeholder="Location" />
-        <input type="text" id="education" placeholder="Education" />
+        <h2>Profile</h2>
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter your username" required />
+        <label for="bio">Bio:</label>
+        <input type="text" id="bio" placeholder="Tell us about yourself" />
         <button onclick="saveProfile()">Save</button>
     </div>
 
     <script>
         const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
         const binId = '6715f722ad19ca34f8bbffde';
+        const username = localStorage.getItem('username');
+
+        // Check if user is logged in
+        if (!username) {
+            window.location.href = 'index.html';
+        }
 
         async function loadProfile() {
-            const username = localStorage.getItem('username');
             const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: {
                     'X-Master-Key': apiKey
@@ -68,48 +73,39 @@
 
             if (user) {
                 document.getElementById('username').value = user.username;
-                document.getElementById('location').value = user.location || '';
-                document.getElementById('education').value = user.education || '';
+                document.getElementById('bio').value = user.bio || '';
             }
         }
 
         async function saveProfile() {
-            const newUsername = document.getElementById('username').value;
-            const location = document.getElementById('location').value;
-            const education = document.getElementById('education').value;
-            const currentUsername = localStorage.getItem('username');
+            const userProfile = {
+                username: document.getElementById('username').value,
+                bio: document.getElementById('bio').value,
+            };
 
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': apiKey
+                },
+                body: JSON.stringify({
+                    users: [...(await getUsers()), userProfile]
+                })
+            });
+
+            alert('Profile saved successfully!');
+            window.location.href = 'homepage.html'; // Redirect to homepage
+        }
+
+        async function getUsers() {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: {
                     'X-Master-Key': apiKey
                 }
             });
             const data = await response.json();
-            const users = data.record.users || [];
-
-            const existingUser = users.find(u => u.username === newUsername && u.username !== currentUsername);
-
-            if (existingUser) {
-                alert('Username is already taken. Please choose another one.');
-                return;
-            }
-
-            const userIndex = users.findIndex(u => u.username === currentUsername);
-            if (userIndex !== -1) {
-                users[userIndex] = { username: newUsername, location, education, secretKey: users[userIndex].secretKey };
-                await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': apiKey
-                    },
-                    body: JSON.stringify({ users })
-                });
-
-                alert('Profile updated successfully!');
-                localStorage.setItem('username', newUsername);
-                window.location.href = 'homepage.html';
-            }
+            return data.record.users || [];
         }
 
         window.onload = loadProfile;
