@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .button {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to the Homepage</h1>
+
+    <button class="button" onclick="goToProfile()">Profile</button>
+    <button class="button" onclick="searchUser()">Search Users</button>
+    <button class="button" onclick="viewChats()">My Chats</button>
+    <button class="button" onclick="logout()">Logout</button>
+
+    <script>
+        function goToProfile() {
+            window.location.href = 'profile.html';
+        }
+
+        function searchUser() {
+            window.location.href = 'search.html';
+        }
+
+        function viewChats() {
+            window.location.href = 'my-chats.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('auth');
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+
+        // Redirect if not logged in
+        if (!localStorage.getItem('auth')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+</body>
+</html>
