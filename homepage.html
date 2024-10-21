@@ -5,46 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homepage</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        #homeBox {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        button {
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            width: 200px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
+        /* Add modern styles */
     </style>
 </head>
 <body>
-    <div id="homeBox">
-        <h2>Welcome to the Chat Application</h2>
-        <button onclick="window.location.href='profile.html'">Profile</button>
-        <button onclick="window.location.href='search.html'">Search Users</button>
-        <button onclick="window.location.href='mychats.html'">My Chats</button>
-        <button onclick="logout()">Log Out</button>
-    </div>
+    <h1>Welcome, <span id="usernameDisplay"></span></h1>
+    <button onclick="window.location.href='profile.html'">Profile</button>
+    <button onclick="logout()">Log Out</button>
+    <button onclick="window.location.href='search.html'">Search Users</button>
+    <button onclick="window.location.href='my-chats.html'">My Chats</button>
 
     <script>
+        // Check if user is logged in
+        if (!localStorage.getItem('username')) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('usernameDisplay').innerText = localStorage.getItem('username');
+
         function logout() {
-            localStorage.removeItem('auth');
-            localStorage.removeItem('secretKey');
             localStorage.removeItem('username');
             window.location.href = 'index.html';
         }
