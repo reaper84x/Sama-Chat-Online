@@ -5,110 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        #profileBox {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        input {
-            padding: 10px;
-            margin: 10px 0;
-            width: calc(100% - 22px);
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            transition: border 0.3s;
-        }
-        input:focus {
-            border-color: #3498db;
-        }
-        button {
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
+        /* Add modern styles */
     </style>
 </head>
 <body>
-    <div id="profileBox">
-        <h2>Profile</h2>
-        <label for="username">Username:</label>
-        <input type="text" id="username" placeholder="Enter your username" required />
-        <label for="bio">Bio:</label>
-        <input type="text" id="bio" placeholder="Tell us about yourself" />
-        <button onclick="saveProfile()">Save</button>
-    </div>
+    <h1>Your Profile</h1>
+    <input type="text" id="usernameInput" placeholder="Username" required />
+    <button onclick="saveProfile()">Save</button>
+    <button onclick="window.location.href='homepage.html'">Back</button>
 
     <script>
-        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
-        const binId = '6715f722ad19ca34f8bbffde';
-        const username = localStorage.getItem('username');
-
         // Check if user is logged in
-        if (!username) {
+        if (!localStorage.getItem('username')) {
             window.location.href = 'index.html';
         }
 
-        async function loadProfile() {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        async function saveProfile() {
+            const username = document.getElementById('usernameInput').value;
+
+            const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
                 headers: {
-                    'X-Master-Key': apiKey
+                    'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
                 }
             });
             const data = await response.json();
             const users = data.record.users || [];
-            const user = users.find(u => u.username === username);
 
-            if (user) {
-                document.getElementById('username').value = user.username;
-                document.getElementById('bio').value = user.bio || '';
+            if (users.some(user => user.username === username)) {
+                alert('Username already exists!');
+                return;
             }
-        }
 
-        async function saveProfile() {
-            const userProfile = {
-                username: document.getElementById('username').value,
-                bio: document.getElementById('bio').value,
-            };
+            const currentUser = users.find(user => user.username === localStorage.getItem('username'));
+            currentUser.username = username;
 
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': apiKey
+                    'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
                 },
-                body: JSON.stringify({
-                    users: [...(await getUsers()), userProfile]
-                })
+                body: JSON.stringify({ users })
             });
 
-            alert('Profile saved successfully!');
-            window.location.href = 'homepage.html'; // Redirect to homepage
+            localStorage.setItem('username', username);
+            alert('Profile updated!');
+            window.location.href = 'homepage.html';
         }
-
-        async function getUsers() {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: {
-                    'X-Master-Key': apiKey
-                }
-            });
-            const data = await response.json();
-            return data.record.users || [];
-        }
-
-        window.onload = loadProfile;
     </script>
 </body>
 </html>
+``
