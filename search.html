@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .search-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Search for Users</h2>
+    <input type="text" class="input-box" id="usernameInput" placeholder="Enter username">
+    <button class="search-btn" onclick="searchUser()">Search</button>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        const binId = "6715f722ad19ca34f8bbffde";  // Your Bin ID
+        const apiKey = "$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi";  // Your API Key
+
+        async function searchUser() {
+            const username = document.getElementById('usernameInput').value;
+
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+
+            // Fetch users from JSONBin
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: {
+                    'X-Master-Key': apiKey
+                }
+            });
+            const data = await response.json();
+            const users = data.record.users;
+
+            const user = users.find(u => u.username === username);
+
+            if (user) {
+                document.getElementById('result').innerHTML = `
+                    <h3>${user.username}'s Profile</h3>
+                    <p>Name: ${user.profile.name || 'N/A'}</p>
+                    <p>Location: ${user.profile.location || 'N/A'}</p>
+                    <p>Education: ${user.profile.education || 'N/A'}</p>
+                    <button onclick="startChat('${user.username}')">Chat</button>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `<p>No user found</p>`;
+            }
+        }
+
+        function startChat(username) {
+            localStorage.setItem('chatWith', username);
+            window.location.href = 'chat.html';
+        }
+
+        // Redirect if not logged in
+        if (!localStorage.getItem('auth')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+</body>
+</html>
