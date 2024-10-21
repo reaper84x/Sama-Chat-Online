@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chats</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>My Chats</h1>
+        <ul id="chatList"></ul>
+        <button onclick="goToHomepage()">Back to Homepage</button>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        if (!localStorage.getItem('secretKey')) {
+            alert('You must log in first!');
+            window.location.href = 'index.html'; // Redirect to login page
+        }
+
+        async function fetchChats() {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/6715f722ad19ca34f8bbffde/latest`, {
+                headers: {
+                    'X-Master-Key': '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi'
+                }
+            });
+
+            const data = await response.json();
+            const chats = data.record.chats || [];
+
+            // Display the chats in the list
+            const chatList = document.getElementById('chatList');
+            chats.forEach(chat => {
+                const listItem = document.createElement('li');
+                listItem.textContent = chat.with;
+                listItem.onclick = () => goToChat(chat.with); // Click to go to chat
+                chatList.appendChild(listItem);
+            });
+        }
+
+        function goToChat(username) {
+            window.location.href = `chat.html?user=${encodeURIComponent(username)}`; // Redirect to chat page
+        }
+
+        function goToHomepage() {
+            window.location.href = 'homepage.html'; // Redirect to homepage
+        }
+
+        // Fetch chats on page load
+        fetchChats();
+    </script>
+</body>
+</html>
