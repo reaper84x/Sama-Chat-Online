@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chats</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #chatList {
+            list-style-type: none;
+            padding: 0;
+        }
+        .chatItem {
+            background: white;
+            padding: 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chatItem:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <h2>My Chats</h2>
+    <ul id="chatList"></ul>
+
+    <script>
+        const apiKey = '$2a$10$kfsjxxgU.CH/RGF6GziguOZZFzjhlvxiaYAm2bC6l48gnj7WYrbUi';
+        const binId = '6715f722ad19ca34f8bbffde';
+        const username = localStorage.getItem('username');
+
+        async function loadChats() {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: {
+                    'X-Master-Key': apiKey
+                }
+            });
+            const data = await response.json();
+            const messages = data.record.messages || [];
+
+            const chatMap = {};
+            messages.forEach(msg => {
+                const chatPartner = msg.sender === username ? msg.receiver : msg.sender;
+                if (!chatMap[chatPartner]) {
+                    chatMap[chatPartner] = [];
+                }
+                chatMap[chatPartner].push(msg);
+            });
+
+            const chatList = document.getElementById('chatList');
+            chatList.innerHTML = '';
+            Object.keys(chatMap).forEach(partner => {
+                const chatItem = document.createElement('li');
+                chatItem.className = 'chatItem';
+                chatItem.innerText = `Chat with ${partner}`;
+                chatItem.onclick = () => {
+                    localStorage.setItem('chatWith', partner);
+                    window.location.href = 'chat.html';
+                };
+                chatList.appendChild(chatItem);
+            });
+        }
+
+        window.onload = loadChats;
+    </script>
+</body>
+</html>
